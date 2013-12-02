@@ -1,17 +1,15 @@
 #!/usr/bin/python
 
 from __future__ import print_function, unicode_literals, division
-import numpy
 import numpy as np
 import math
-#import nltk
 from collections import defaultdict
 
 
 def calculate_empirical_fcount(train_toks, encoding):
 
-    fcount_n = numpy.zeros(encoding.length_n(), 'd')
-    fcount_v = numpy.zeros(encoding.length_v(), 'd')
+    fcount_n = np.zeros(encoding.length_n(), 'd')
+    fcount_v = np.zeros(encoding.length_v(), 'd')
 
     for tok, label in train_toks:
         if label == 'n':
@@ -24,9 +22,10 @@ def calculate_empirical_fcount(train_toks, encoding):
 
     return fcount_n, fcount_v
 
+
 def calculate_estimated_fcount(classifier, train_toks, encoding):
-    fcount_n = numpy.zeros(encoding.length_n(), 'd')
-    fcount_v = numpy.zeros(encoding.length_v(), 'd')
+    fcount_n = np.zeros(encoding.length_n(), 'd')
+    fcount_v = np.zeros(encoding.length_v(), 'd')
 
     for tok, l in train_toks:
         pdist = classifier.prob_classify(tok)
@@ -42,7 +41,7 @@ def calculate_estimated_fcount(classifier, train_toks, encoding):
 
     for tok, l in train_toks:
         pdist = classifier.prob_classify(tok)
-    print (pdist.prob('n'), pdist.prob('v') )
+    print (pdist.prob('n'), pdist.prob('v'))
     return fcount_n, fcount_v
 
 
@@ -50,10 +49,11 @@ class probdist(object):
 
     def __init__(self, prob_dict):
         self._prob_dict = prob_dict.copy()
-#
+
     def prob(self, label):
-        return np.exp(self._prob_dict[label]) / np.sum([np.exp(val) for val in self._prob_dict.values()])
-#
+        return (np.exp(self._prob_dict[label]) /
+                np.sum([np.exp(val) for val in self._prob_dict.values()]))
+
     def max(self):
 #        if self._prob_dict['n'] > self._prob_dict['v']:
 #            return 'n'
@@ -63,28 +63,33 @@ class probdist(object):
 #            return 'e'
 
         if not hasattr(self, '_max'):
-            self._max = max((p,v) for (v,p) in self._prob_dict.items())[1]
+            self._max = max((p, v) for (v, p) in self._prob_dict.items())[1]
         return self._max
 
     def samples(self):
         return self._prob_dict.keys()
 
+
 def log_likelihood(classifier, gold):
-    results = classifier.batch_prob_classify([fs for (fs,l) in gold])
+    results = classifier.batch_prob_classify([fs for (fs, l) in gold])
     ll = [pdist.prob(l) for ((fs, l), pdist) in zip(gold, results)]
-    return math.log(float(sum(ll))/len(ll))
+    return float(np.sum(np.log(ll))) / len(ll)
 
 
 def accuracy(classifier, gold):
     results = classifier.batch_classify([fs for (fs, l) in gold])
-    correct = [l == r for ((fs,l),r) in zip(gold, results)]
-    equal = [r=='e' for ((fs,l),r) in zip(gold,results)]
+    correct = [l == r for ((fs, l), r) in zip(gold, results)]
+    equal = [r == 'e' for ((fs, l), r) in zip(gold, results)]
+
     if sum(equal):
         print ('equal results = ', float(sum(equal) * 100) / len(equal), '%')
+
     if correct:
         return float(sum(correct))/len(correct)
+
     else:
         return 0
+
 
 class Maxent(object):
 
@@ -138,17 +143,18 @@ class Maxent(object):
 #                    print (label, total)
             prob_dict[label] = total
 
-#        return nltk.DictionaryProbDist(prob_dict, log=self._logarithmic, normalize=True)
-
         return probdist(prob_dict)
 
     def bin_classify(self, headmat, modmat, weightmat):
         return 'NotImplemented'
 
     @classmethod
-    def train(cls, train_toks, algorithm=None, encoding=None, labels=None, max_iter=10, LC=100, tau=1.0, norm=None, devset=None, eta=1):
-       if algorithm == 'gd':
-            return train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, tau, norm, devset, eta)
+    def train(cls, train_toks, algorithm=None, encoding=None, labels=None,
+              max_iter=10, LC=100, tau=1.0, norm=None, devset=None, eta=1):
+        if algorithm == 'gd':
+            return train_maxent_classifier_with_gd(train_toks, encoding,
+                                                   labels, max_iter, LC,
+                                                   tau, norm, devset, eta)
 
 
 class BinaryMaxentFeatureEncoding(object):
@@ -191,7 +197,7 @@ class BinaryMaxentFeatureEncoding(object):
         return self._length_v
 
     @classmethod
-    def train(cls, train_toks, count_cutoff=0,labels=None ):
+    def train(cls, train_toks, count_cutoff=0, labels=None):
         mapping_n = {}
         mapping_v = {}
         seen_labels = set()
@@ -215,17 +221,22 @@ class BinaryMaxentFeatureEncoding(object):
         return cls(labels, mapping_n, mapping_v)
 
 
-def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, tau,  norm, devset, eta):
+def proximal_op(matrix, nu):
+        return np.sign(matrix) * np.maximum(np.abs(matrix) - nu, 0.)
+
+
+def train_maxent_classifier_with_gd(train_toks, encoding, labels,
+                                    max_iter, LC, tau,  norm, devset, eta):
 
     encoding = BinaryMaxentFeatureEncoding.train(train_toks, labels=labels)
 
-    empirical_fcount_n, empirical_fcount_v = calculate_empirical_fcount(train_toks, encoding)
+    emp_n, emp_v = calculate_empirical_fcount(train_toks, encoding)
 
-    weights_n = numpy.zeros(len(empirical_fcount_n), 'd')
-    weights_v = numpy.zeros(len(empirical_fcount_v), 'd')
+    weights_n = np.zeros(len(emp_n), 'd')
+    weights_v = np.zeros(len(emp_v), 'd')
 
-    weights_xn = numpy.zeros(len(empirical_fcount_n), 'd')
-    weights_xv = numpy.zeros(len(empirical_fcount_v), 'd')
+    weights_xn = np.zeros(len(emp_n), 'd')
+    weights_xv = np.zeros(len(emp_v), 'd')
 
     classifier = Maxent(encoding, weights_n, weights_v)
 
@@ -246,14 +257,15 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
 
             ll = -log_likelihood(classifier, train_toks)
             acc = accuracy(classifier, train_toks)
-            estimated_fcount_n,  estimated_fcount_v  = calculate_estimated_fcount(classifier, train_toks, encoding)
-            grad_n = -(empirical_fcount_n - estimated_fcount_n) / len(train_toks)
-            grad_v = -(empirical_fcount_v - estimated_fcount_v) / len(train_toks)
+            est_n, est_v = calculate_estimated_fcount(classifier,
+                                                      train_toks, encoding)
+            grad_n = -(emp_n - est_n) / len(train_toks)
+            grad_v = -(emp_v - est_v) / len(train_toks)
             dacc = accuracy(classifier, devset)
 
             weights_n = classifier.weights_n()
             weights_v = classifier.weights_v()
-            lam_kp1 = float(1 + numpy.sqrt(1 + 4*(lam_k**2 ))) / 2
+            lam_kp1 = float(1 + np.sqrt(1 + 4 * (lam_k**2))) / 2
 
             norm_n2 = (np.linalg.norm(weights_n, ord=2)**2)
             norm_v2 = (np.linalg.norm(weights_v, ord=2)**2)
@@ -261,28 +273,35 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
             norm_n1 = (np.linalg.norm(weights_n, ord=1)**2)
             norm_v1 = (np.linalg.norm(weights_v, ord=1)**2)
 
-
             normsum_l2 = (norm_n2 + norm_v2)
             normsum_l1 = (norm_n1 + norm_v1)
 
-
-            if norm == None:
-                weights_n -= (eta * grad_n) / numpy.sqrt(itr)
-                weights_v -= (eta * grad_v) / numpy.sqrt(itr)
-                print ('%9d   %14.5f   %14.5f  %9.3f  %9.3f' %(itr, ll, normsum_l2, acc, dacc))
+            if norm is None:
+                weights_n -= (eta * grad_n) / np.sqrt(itr)
+                weights_v -= (eta * grad_v) / np.sqrt(itr)
+                print ('%9d   %14.5f   %14.5f  %9.3f  %9.3f'
+                       % (itr, ll, normsum_l2, acc, dacc))
                 tr.append(acc)
                 trl.append(ll)
                 dr.append(dacc)
 
             elif norm == 'l1':
 
-                nu = 1 / LC
+                nu = tau / LC
 
-                temp_wvy = weights_v - (tau * grad_v) / LC
-                temp_wny = weights_n - (tau * grad_n) / LC
+                temp_wvy = weights_v - grad_v / LC
+                temp_wny = weights_n - grad_n / LC
 
-                weights_xvp1 = numpy.where(temp_wvy > 0, numpy.maximum(temp_wvy-nu, 0), numpy.minimum(temp_wvy+nu, 0))
-                weights_xnp1 = numpy.where(temp_wny > 0, numpy.maximum(temp_wny-nu, 0), numpy.minimum(temp_wny+nu, 0))
+#                weights_xvp1 = np.where(temp_wvy > 0,
+#                                        np.maximum(temp_wvy-nu, 0),
+#                                        np.minimum(temp_wvy+nu, 0))
+
+#                weights_xnp1 = np.where(temp_wny > 0,
+#                                         np.maximum(temp_wny-nu, 0),
+#                                         np.minimum(temp_wny+nu, 0))
+
+                weights_xvp1 = proximal_op(temp_wvy, nu)
+                weights_xnp1 = proximal_op(temp_wny, nu)
 
                 lr = (lam_k - 1) / lam_kp1
 
@@ -297,21 +316,22 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
 
                 ll += (1/LC * normsum_l1)
 
-                print ('%9d   %14.5f    %14.5f    %9.3f, %9.3f' %(itr, ll, normsum_l1, acc, dacc))
+                print ('%9d   %14.5f    %14.5f    %9.3f, %9.3f'
+                       % (itr, ll, normsum_l1, acc, dacc))
                 tr.append(acc)
                 trl.append(ll)
                 dr.append(dacc)
 
             elif norm == 'l2':
-                if devset == None:
+                if devset is None:
                     raise ValueError('no devset provided')
-                    break
                 ll += (tau * normsum_l2)
 
-                weights_n -= eta*(grad_n + numpy.dot(tau, weights_n))/numpy.sqrt(itr)
-                weights_v -= eta*(grad_v + numpy.dot(tau, weights_v))/numpy.sqrt(itr)
+                weights_n -= eta*(grad_n + np.dot(tau, weights_n))/np.sqrt(itr)
+                weights_v -= eta*(grad_v + np.dot(tau, weights_v))/np.sqrt(itr)
 
-                print ('%9d   %14.5f  %14.5f  %9.3f  %9.3f' %(itr, ll, normsum_l2, acc, dacc))
+                print ('%9d   %14.5f  %14.5f  %9.3f  %9.3f'
+                       % (itr, ll, normsum_l2, acc, dacc))
 
                 tr.append(acc)
                 trl.append(ll)
@@ -323,6 +343,4 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
     except:
         raise
 
-    return classifier, tr, trl, dr, empirical_fcount_n, empirical_fcount_v, mapping_n, mapping_v
-
-
+    return classifier, tr, trl, dr, emp_n, emp_v, mapping_n, mapping_v
