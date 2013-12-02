@@ -1,8 +1,7 @@
 #!/usr/bin/python
 
-from __future__ import print_function, unicode_literals, division
+from __future__ import print_function, division
 import numpy as np
-import math
 from collections import defaultdict
 
 
@@ -41,7 +40,7 @@ def calculate_estimated_fcount(classifier, train_toks, encoding):
 
     for tok, l in train_toks:
         pdist = classifier.prob_classify(tok)
-    print (pdist.prob('n'), pdist.prob('v'))
+
     return fcount_n, fcount_v
 
 
@@ -140,7 +139,6 @@ class Maxent(object):
                 for (f_id, f_val) in feature_vector:
                     total += self._weights_v[f_id] * f_val
 
-#                    print (label, total)
             prob_dict[label] = total
 
         return probdist(prob_dict)
@@ -257,21 +255,25 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
 
             ll = -log_likelihood(classifier, train_toks)
             acc = accuracy(classifier, train_toks)
+
             est_n, est_v = calculate_estimated_fcount(classifier,
                                                       train_toks, encoding)
+
             grad_n = -(emp_n - est_n) / len(train_toks)
             grad_v = -(emp_v - est_v) / len(train_toks)
+
             dacc = accuracy(classifier, devset)
 
             weights_n = classifier.weights_n()
             weights_v = classifier.weights_v()
+
             lam_kp1 = float(1 + np.sqrt(1 + 4 * (lam_k**2))) / 2
 
             norm_n2 = (np.linalg.norm(weights_n, ord=2)**2)
             norm_v2 = (np.linalg.norm(weights_v, ord=2)**2)
 
-            norm_n1 = (np.linalg.norm(weights_n, ord=1)**2)
-            norm_v1 = (np.linalg.norm(weights_v, ord=1)**2)
+            norm_n1 = (np.linalg.norm(weights_n, ord=1))
+            norm_v1 = (np.linalg.norm(weights_v, ord=1))
 
             normsum_l2 = (norm_n2 + norm_v2)
             normsum_l1 = (norm_n1 + norm_v1)
@@ -314,7 +316,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 weights_n = weights_ynp1
                 weights_v = weights_yvp1
 
-                ll += (1/LC * normsum_l1)
+                ll += (tau * normsum_l1)
 
                 print ('%9d   %14.5f    %14.5f    %9.3f, %9.3f'
                        % (itr, ll, normsum_l1, acc, dacc))
@@ -323,10 +325,11 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 dr.append(dacc)
 
             elif norm == 'l2':
+
                 if devset is None:
                     raise ValueError('no devset provided')
-                ll += (tau * normsum_l2)
 
+                ll += (tau * normsum_l2)
                 weights_n -= eta*(grad_n + np.dot(tau, weights_n))/np.sqrt(itr)
                 weights_v -= eta*(grad_v + np.dot(tau, weights_v))/np.sqrt(itr)
 
