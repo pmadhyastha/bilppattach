@@ -28,7 +28,7 @@ def calculate_estimated_fcount(classifier, train_toks, encoding):
 
     for tok, label in train_toks:
         pdist = classifier.prob_classify(tok)
-#        print(pdist.prob('n'), pdist.prob('v'))
+    print(pdist.prob('n'), pdist.prob('v'))
 
     return fcount
 
@@ -233,7 +233,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
             grad = -(empirical_fcount - estimated_fcount) / len(train_toks)
             dacc = accuracy(classifier, devset)
             weights = classifier.weights()
-            normsum = numpy.linalg.norm(weights, ord=2)
+            normsum = (numpy.linalg.norm(weights, ord=2)**2)
             if norm == None:
                 weights -= (eta * grad) / numpy.sqrt(itr)
                 print ('%9d   %14.5f  %14.5f  %9.3f  %9.3f' %(itr, normsum, ll, acc, dacc))

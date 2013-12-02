@@ -4,48 +4,47 @@ from __future__ import print_function, unicode_literals, division
 import numpy
 import numpy as np
 import math
+#import nltk
 from collections import defaultdict
 
 
-def calculate_empirical_fcount(train_toks, encoding, label):
-    if label == 'n':
-        fcount = numpy.zeros(encoding.length_n(), 'd')
-        for tok, l in train_toks:
+def calculate_empirical_fcount(train_toks, encoding):
+
+    fcount_n = numpy.zeros(encoding.length_n(), 'd')
+    fcount_v = numpy.zeros(encoding.length_v(), 'd')
+
+    for tok, label in train_toks:
+        if label == 'n':
             for (index, val) in encoding.encode(tok, label):
-                fcount[index] += val
+                fcount_n[index] += val
 
-    if label == 'v':
-        fcount = numpy.zeros(encoding.length_v(), 'd')
-        for tok, l in train_toks:
+        if label == 'v':
             for (index, val) in encoding.encode(tok, label):
-                fcount[index] += val
-    print (np.sum(fcount))
-    return fcount
+                fcount_v[index] += val
 
-def calculate_estimated_fcount(classifier, train_toks, encoding, label):
-    if label == 'n':
-        fcount = numpy.zeros(encoding.length_n(), 'd')
-        for tok, l in train_toks:
-            pdist = classifier.prob_classify(tok)
-            prob = pdist.prob(label)
-            for (fid, fval) in encoding.encode(tok, label):
-#                print (fval, 'fval')
-                fcount[fid] += prob*fval
+    return fcount_n, fcount_v
 
-    if label == 'v':
-        fcount = numpy.zeros(encoding.length_v(), 'd')
-        for tok, l in train_toks:
-            pdist = classifier.prob_classify(tok)
-            prob = pdist.prob(label)
-            for (fid, fval) in encoding.encode(tok, label):
-#                print (fval, 'fval')
-                fcount[fid] += prob*fval
+def calculate_estimated_fcount(classifier, train_toks, encoding):
+    fcount_n = numpy.zeros(encoding.length_n(), 'd')
+    fcount_v = numpy.zeros(encoding.length_v(), 'd')
 
     for tok, l in train_toks:
         pdist = classifier.prob_classify(tok)
-#        print (pdist.prob('n'), pdist.prob('v'))
 
-    return fcount
+        for label in pdist.samples():
+            prob = pdist.prob(label)
+            if label == 'n':
+                for (fid, fval) in encoding.encode(tok, label):
+                    fcount_n[fid] += prob * fval
+            elif label == 'v':
+                for (fid, fval) in encoding.encode(tok, label):
+                    fcount_v[fid] += prob * fval
+
+    for tok, l in train_toks:
+        pdist = classifier.prob_classify(tok)
+    print (pdist.prob('n'), pdist.prob('v') )
+    return fcount_n, fcount_v
+
 
 class probdist(object):
 
@@ -56,16 +55,16 @@ class probdist(object):
         return np.exp(self._prob_dict[label]) / np.sum([np.exp(val) for val in self._prob_dict.values()])
 #
     def max(self):
-        if self._prob_dict['n'] > self._prob_dict['v']:
-            return 'n'
-        elif self._prob_dict['v'] > self._prob_dict['n']:
-            return 'v'
-        elif self._prob_dict['v']  == self._prob_dict['n']:
-            return 'e'
+#        if self._prob_dict['n'] > self._prob_dict['v']:
+#            return 'n'
+#        elif self._prob_dict['v'] > self._prob_dict['n']:
+#            return 'v'
+#        elif self._prob_dict['v']  == self._prob_dict['n']:
+#            return 'e'
 
-#        if not hasattr(self, '_max'):
-#            self._max = max((p,v) for (v,p) in self._prob_dict.items())[1]
-#        return self._max
+        if not hasattr(self, '_max'):
+            self._max = max((p,v) for (v,p) in self._prob_dict.items())[1]
+        return self._max
 
     def samples(self):
         return self._prob_dict.keys()
@@ -128,7 +127,6 @@ class Maxent(object):
         prob_dict = {}
         for label in self._encoding.labels():
             feature_vector = self._encoding.encode(featureset, label)
-
             total = 0.0
             if label == 'n':
                 for (f_id, f_val) in feature_vector:
@@ -139,7 +137,9 @@ class Maxent(object):
 
 #                    print (label, total)
             prob_dict[label] = total
-#        return DictProbDist(prob_dict, log=self._logarithmic, normalize=True)
+
+#        return nltk.DictionaryProbDist(prob_dict, log=self._logarithmic, normalize=True)
+
         return probdist(prob_dict)
 
     def bin_classify(self, headmat, modmat, weightmat):
@@ -219,8 +219,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
 
     encoding = BinaryMaxentFeatureEncoding.train(train_toks, labels=labels)
 
-    empirical_fcount_n = calculate_empirical_fcount(train_toks, encoding, 'n')
-    empirical_fcount_v = calculate_empirical_fcount(train_toks, encoding, 'v')
+    empirical_fcount_n, empirical_fcount_v = calculate_empirical_fcount(train_toks, encoding)
 
     weights_n = numpy.zeros(len(empirical_fcount_n), 'd')
     weights_v = numpy.zeros(len(empirical_fcount_v), 'd')
@@ -247,8 +246,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
 
             ll = -log_likelihood(classifier, train_toks)
             acc = accuracy(classifier, train_toks)
-            estimated_fcount_n = calculate_estimated_fcount(classifier, train_toks, encoding, 'n')
-            estimated_fcount_v = calculate_estimated_fcount(classifier, train_toks, encoding, 'v')
+            estimated_fcount_n,  estimated_fcount_v  = calculate_estimated_fcount(classifier, train_toks, encoding)
             grad_n = -(empirical_fcount_n - estimated_fcount_n) / len(train_toks)
             grad_v = -(empirical_fcount_v - estimated_fcount_v) / len(train_toks)
             dacc = accuracy(classifier, devset)
