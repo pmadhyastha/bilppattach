@@ -250,6 +250,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
     tr = []
     trl = []
     dr = []
+    ob = []
     itr = 0
 
     lam_k = 1
@@ -279,12 +280,8 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
             norm_n2p = (np.linalg.norm(weights_n, ord=2))
             norm_v2p = (np.linalg.norm(weights_v, ord=2))
 
-            norm_n1 = (np.linalg.norm(weights_n, ord=1))
-            norm_v1 = (np.linalg.norm(weights_v, ord=1))
-
             normsum_l2 = (norm_n2 + norm_v2)
             normsum_l2p = (norm_n2p + norm_v2p)
-            normsum_l1 = (norm_n1 + norm_v1)
 
             if norm is None:
                 weights_n -= (eta * grad_n) / np.sqrt(itr)
@@ -294,9 +291,14 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 tr.append(acc)
                 trl.append(ll)
                 dr.append(dacc)
+                ob.append(ll)
 
             elif norm == 'l1':
 
+                norm_n1 = (np.linalg.norm(weights_n, ord=1))
+                norm_v1 = (np.linalg.norm(weights_v, ord=1))
+
+                normsum_l1 = (norm_n1 + norm_v1)
                 nu = tau / LC
 
                 temp_wvy = weights_v - grad_v / LC
@@ -331,6 +333,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 tr.append(acc)
                 trl.append(ll)
                 dr.append(dacc)
+                ob.append(obj)
 
             elif norm == 'l2proximal':
 
@@ -360,6 +363,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 tr.append(acc)
                 trl.append(ll)
                 dr.append(dacc)
+                ob.append(obj)
 
             elif norm == 'l2':
 
@@ -376,6 +380,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 tr.append(acc)
                 trl.append(ll)
                 dr.append(dacc)
+                ob.append(obj)
 
             classifier.set_weights(weights_n, weights_v)
             if itr >= max_iter:
@@ -383,4 +388,4 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
     except:
         raise
 
-    return classifier, tr, trl, dr, emp_n, emp_v, mapping_n, mapping_v
+    return classifier, tr, ob, dr,
