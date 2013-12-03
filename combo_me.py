@@ -48,34 +48,33 @@ def accuracy(encoding_l, encoding_b, classifier, gold):
     lv = (classifier.weight_lv())
     bn = np.matrix(classifier.weight_bn())
     bv = np.matrix(classifier.weight_bv())
-#    I = np.matrix(np.eye(r,c))
+
     if encoding_l == None:
         encoding_l = encoding_b
+
     score = []
     total = 0
     equal = 0
 
     for (tok, label) in gold:
+
         total += 1
         noun = 0
         verb = 0
+
         v, n, m = encoding_b.bil_u_encode(tok)
         featureset = encoding_l.ext_featstruct(tok)
         fvec_n = encoding_l.lin_encode(featureset, 'n')
         fvec_v = encoding_l.lin_encode(featureset, 'v')
+
         for (f_id, f_val) in fvec_n:
             noun += ln[f_id] * f_val
+
         for (f_id, f_val) in fvec_v:
             verb += lv[f_id] * f_val
-#        print (noun, verb)
-#            print ('1 ', noun, verb)
-#        noun += (n*(I*m.T))[0,0]
-#        verb += (v*(I*m.T))[0,0]
 
         noun += (n*(bn*m.T))[0,0]
         verb += (v*(bv*m.T))[0,0]
-#        print (np.exp(noun), np.exp(verb))
-#        Z = np.exp(noun) + np.exp(verb)
         if np.exp(noun) > np.exp(verb) and label == 'n':
             score.append(1)
         elif np.exp(noun) < np.exp(verb) and label == 'v':
@@ -85,6 +84,7 @@ def accuracy(encoding_l, encoding_b, classifier, gold):
     if equal > 0:
         print ('number of equal scores = ', equal)
     return float(np.sum(score)) / total
+
 
 class ComboMaxent(object):
     '''
@@ -236,6 +236,12 @@ class ComboMaxentFeatEncoding(object):
         self._featuresets = featuresets
         self._emps = emps
 
+    def mapping_n(self):
+        return self._mapping_n
+
+    def mapping_v(self):
+        return self._mapping_v
+
     def featdata(self):
         return self._featuresets
 
@@ -341,12 +347,11 @@ class ComboMaxentFeatEncoding(object):
                 featuresets.append((featureset, label))
                 seen_labels.add(label)
 
-                if label == 'n':
-                    for (fname, fval) in featureset.items():
+                for (fname, fval) in featureset.items():
+                    if label == 'n':
                         if (fname, fval) not in mapping_n:
                             mapping_n[fname, fval] = len(mapping_n)
-                if label == 'v':
-                    for (fname, fval) in featureset.items():
+                    if label == 'v':
                         if (fname, fval) not in mapping_v:
                             mapping_v[fname, fval] = len(mapping_v)
 
@@ -356,12 +361,11 @@ class ComboMaxentFeatEncoding(object):
                     featureset = word_features(tok)
                     featuresets.append((featureset, label))
                     seen_labels.add(label)
-                    if label == 'n':
-                        for (fname, fval) in featureset.items():
+                    for (fname, fval) in featureset.items():
+                        if label == 'n':
                             if (fname, fval) not in mapping_n:
                                 mapping_n[fname, fval] = len(mapping_n)
-                    if label == 'v':
-                        for (fname, fval) in featureset.items():
+                        if label == 'v':
                             if (fname, fval) not in mapping_v:
                                 mapping_v[fname, fval] = len(mapping_v)
 

@@ -223,6 +223,10 @@ def proximal_op(matrix, nu):
         return np.sign(matrix) * np.maximum(np.abs(matrix) - nu, 0.)
 
 
+def proximal_l2(matrix, nu):
+    return ((1./(1.+nu)) * matrix)
+
+
 def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                                     max_iter, LC, tau,  norm, devset, eta):
 
@@ -272,17 +276,21 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
             norm_n2 = (np.linalg.norm(weights_n, ord=2)**2)
             norm_v2 = (np.linalg.norm(weights_v, ord=2)**2)
 
+            norm_n2p = (np.linalg.norm(weights_n, ord=2))
+            norm_v2p = (np.linalg.norm(weights_v, ord=2))
+
             norm_n1 = (np.linalg.norm(weights_n, ord=1))
             norm_v1 = (np.linalg.norm(weights_v, ord=1))
 
             normsum_l2 = (norm_n2 + norm_v2)
+            normsum_l2p = (norm_n2p + norm_v2p)
             normsum_l1 = (norm_n1 + norm_v1)
 
             if norm is None:
                 weights_n -= (eta * grad_n) / np.sqrt(itr)
                 weights_v -= (eta * grad_v) / np.sqrt(itr)
                 print ('%9d   %14.5f   %14.5f  %9.3f  %9.3f'
-                       % (itr, ll, normsum_l2, acc, dacc))
+                       % (itr, ll, normsum_l2p, acc, dacc))
                 tr.append(acc)
                 trl.append(ll)
                 dr.append(dacc)
@@ -316,10 +324,39 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 weights_n = weights_ynp1
                 weights_v = weights_yvp1
 
-                ll += (tau * normsum_l1)
+                obj = ll + (tau * normsum_l1)
 
-                print ('%9d   %14.5f    %14.5f    %9.3f, %9.3f'
-                       % (itr, ll, normsum_l1, acc, dacc))
+                print ('%9d   %14.5f %14.5f  %14.5f    %9.3f, %9.3f'
+                       % (itr, ll, obj, normsum_l1, acc, dacc))
+                tr.append(acc)
+                trl.append(ll)
+                dr.append(dacc)
+
+            elif norm == 'l2proximal':
+
+                nu = tau / LC
+
+                temp_wvy = weights_v - grad_v / LC
+                temp_wny = weights_n - grad_n / LC
+
+                weights_xvp1 = proximal_l2(temp_wvy, nu)
+                weights_xnp1 = proximal_l2(temp_wny, nu)
+
+                lr = (lam_k - 1) / lam_kp1
+
+                weights_yvp1 = weights_xvp1 + lr * (weights_xvp1 - weights_xv)
+                weights_ynp1 = weights_xnp1 + lr * (weights_xnp1 - weights_xn)
+
+                weights_xn = weights_xnp1
+                weights_xv = weights_xvp1
+
+                weights_n = weights_ynp1
+                weights_v = weights_yvp1
+
+                obj = ll + (tau * normsum_l2p)
+
+                print ('%9d   %14.5f %14.5f  %14.5f    %9.3f, %9.3f'
+                       % (itr, ll, obj, normsum_l2p, acc, dacc))
                 tr.append(acc)
                 trl.append(ll)
                 dr.append(dacc)
@@ -329,12 +366,12 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 if devset is None:
                     raise ValueError('no devset provided')
 
-                ll += (tau * normsum_l2)
+                obj = ll + (tau * normsum_l2)
                 weights_n -= eta*(grad_n + np.dot(tau, weights_n))/np.sqrt(itr)
                 weights_v -= eta*(grad_v + np.dot(tau, weights_v))/np.sqrt(itr)
 
-                print ('%9d   %14.5f  %14.5f  %9.3f  %9.3f'
-                       % (itr, ll, normsum_l2, acc, dacc))
+                print ('%9d   %14.5f %14.5f  %14.5f  %9.3f  %9.3f'
+                       % (itr, ll, obj, normsum_l2, acc, dacc))
 
                 tr.append(acc)
                 trl.append(ll)
