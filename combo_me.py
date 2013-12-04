@@ -57,7 +57,7 @@ def accuracy(encoding_l, encoding_b, classifier, gold):
     equal = 0
 
     for (tok, label) in gold:
-
+        prob = {}
         total += 1
         noun = 0
         verb = 0
@@ -73,16 +73,12 @@ def accuracy(encoding_l, encoding_b, classifier, gold):
         for (f_id, f_val) in fvec_v:
             verb += lv[f_id] * f_val
 
-        noun += (n*(bn*m.T))[0,0]
-        verb += (v*(bv*m.T))[0,0]
-        if np.exp(noun) > np.exp(verb) and label == 'n':
+        prob['n'] = np.exp((n*(bn*m.T))[0,0] + noun)
+        prob['v'] = np.exp((v*(bv*m.T))[0,0] + verb)
+
+        if label == max((p, v) for (v, p) in prob.items())[1]:
             score.append(1)
-        elif np.exp(noun) < np.exp(verb) and label == 'v':
-            score.append(1)
-        elif np.exp(noun) == np.exp(verb):
-            equal += 1
-    if equal > 0:
-        print ('number of equal scores = ', equal)
+
     return float(np.sum(score)) / total
 
 
