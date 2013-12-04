@@ -25,15 +25,15 @@ mapdh = np.loadtxt('clean/devheads.txt', dtype=str)
 mapdm = np.loadtxt('clean/devmods.txt', dtype=str)
 
 
-encoding = co.ComboMaxentFeatEncoding.train(traindata, phih, phim, maph, mapm, pptype='for')
+encoding = co.ComboMaxentFeatEncoding.train(traindata, phih, phim, maph, mapm, pptype=None)
 traintoks = encoding.train_toks()
 traintokens = [(co.word_features(t),l) for t,l in encoding.train_toks()]
 print 'type = ', inp, 'total samples = ', samples
-print "total training examples for the pptype - 'for' ", len(traintoks)
-devencode = co.ComboMaxentFeatEncoding.train(devdata, phidh, phidm, mapdh, mapdm, pptype='for')
+print "total training examples for the pptype - None ", len(traintoks)
+devencode = co.ComboMaxentFeatEncoding.train(devdata, phidh, phidm, mapdh, mapdm, pptype=None)
 devtoks = devencode.train_toks()
 devtokens = [(co.word_features(t),l) for t,l in devencode.train_toks()]
-print "total development examples for the pptype - 'for' ", len(devtoks)
+print "total development examples for the pptype - None ", len(devtoks)
 
 def decreasing(L):
     return all(x>=y for x, y in zip(L, L[1:]))
