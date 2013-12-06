@@ -142,29 +142,40 @@ class ComboMaxent(object):
         correct = 0
 
         for tok, label in self._encoding.train_toks():
-            prob_nl = 0
-            prob_vl = 0
+
+            score_nl = 0
+            score_vl = 0
             v, n, m = self._encoding.bil_encode([(tok, label)])
             featureset = word_features(tok)
 
             for l in ('n','v'):
-                if l == 'n':
-                    feature_vector_n = self._encoding.lin_encode(featureset, l)
-                    for (f_id, f_val) in feature_vector_n:
-                        prob_nl += ln[f_id] * f_val
-                    prob_bnl = (n * (bn * m.T))[0,0]
-                    prob_n = np.exp(prob_nl + prob_bnl)
-                if l == 'v':
-                    feature_vector_v = self._encoding.lin_encode(featureset, l)
-                    for (f_id, f_val) in feature_vector_v:
-                        prob_vl += lv[f_id] * f_val
-                    prob_bvl = (v * (bv * m.T))[0,0]
-                    prob_v = np.exp(prob_vl + prob_bvl)
 
-            Z = prob_n + prob_v
-            probN = float(prob_n) / Z
-            probV=  float(prob_v) / Z
+                if l == 'n':
+
+                    feature_vector_n = self._encoding.lin_encode(featureset, l)
+
+                    for (f_id, f_val) in feature_vector_n:
+                        score_nl += ln[f_id] * f_val
+
+                    score_bnl = (n * (bn * m.T))[0,0]
+                    score_n = np.exp(score_nl + score_bnl)
+
+                if l == 'v':
+
+                    feature_vector_v = self._encoding.lin_encode(featureset, l)
+
+                    for (f_id, f_val) in feature_vector_v:
+                        score_vl += lv[f_id] * f_val
+
+                    score_bvl = (v * (bv * m.T))[0,0]
+                    score_v = np.exp(score_vl + score_bvl)
+
+            Z = score_n + score_v
+            probN = float(score_n) / Z
+            probV = float(score_v) / Z
+
 #            print (probN, probV)
+
             if label == 'n':
                 ll.append(probN)
                 if probN > probV:
@@ -176,15 +187,18 @@ class ComboMaxent(object):
 
             est_bn += probN * bil_inn[tok[1]+'_'+tok[3]]
             est_bv += probV * bil_inn[tok[0]+'_'+tok[3]]
+
             for (index, val) in feature_vector_n:
                 est_ln[index] += probN * val
             for (index, val) in feature_vector_v:
                 est_lv[index] += probV * val
+
         ####Computing for negative log likelihood minimization!!! #####
         gradN_l = -(emp_ln - est_ln)/tot_samples
         gradN_b = -(emp_bn - est_bn)/tot_samples
         gradV_l = -(emp_lv - est_lv)/tot_samples
         gradV_b = -(emp_bv - est_bv)/tot_samples
+
         logl = -float(np.sum(np.log(ll))) / tot_samples
         acc = float(correct) / tot_samples
 
@@ -228,6 +242,7 @@ class ComboMaxentFeatEncoding(object):
         self._mapping_v = mapping_v
         self._length_n = len(mapping_n)
         self._length_v = len(mapping_v)
+        self._shape = self._phi_h.shape[1], self._phi_m.shape[1]
         self._labels = labels
         self._featuresets = featuresets
         self._emps = emps
@@ -252,32 +267,49 @@ class ComboMaxentFeatEncoding(object):
     def compute_emps(self):
         trn = self._train_toks
         V, N, M = self.bil_encode(trn)
-        emp_nfcount = N.T*M
-        emp_vfcount = V.T*M
+        emp_nfcount = np.matrix(np.zeros(self._shape))
+        emp_vfcount = np.matrix(np.zeros(self._shape))
 
         fcount_v = (np.zeros(self._length_v, np.float64))
         fcount_n = (np.zeros(self._length_n, np.float64))
+
         featuresets = [(word_features(x), c) for x,c in self._train_toks]
-        verb = 'v'
-        noun = 'n'
-        for tok, l in featuresets:
-            for (index, val) in self.lin_encode(tok, verb):
-                fcount_v[index] += val
-            for (index, val) in self.lin_encode(tok, noun):
-                fcount_n[index] += val
+
+        for tok, label in featuresets:
+            if label == 'v':
+                for (index, val) in self.lin_encode(tok, label):
+                    fcount_v[index] += val
+            if label == 'n':
+                for (index, val) in self.lin_encode(tok, label):
+                    fcount_n[index] += val
         fcount_bil = {}
+
         for tok, label in self._train_toks:
+
             v, n, m = self.bil_encode([(tok, label)])
             vm = tok[0]+'_'+tok[3]
             nm = tok[1]+'_'+tok[3]
+
+            vm_feat = v.T*m
+            nm_feat = n.T*m
+
+            if label == 'v':
+                emp_vfcount += vm_feat
+
             if vm not in fcount_bil:
-                fcount_bil[vm] = v.T*m
+                fcount_bil[vm] = vm_feat
+
+            if label == 'n':
+                emp_nfcount += nm_feat
+
             if nm not in fcount_bil:
-                fcount_bil[nm] = n.T*m
+                fcount_bil[nm] = nm_feat
+
         self._emps = (emp_vfcount, emp_nfcount, fcount_v, fcount_n, fcount_bil)
 
     def train_toks(self):
         return self._train_toks
+
     def bil_encode(self, train_toks):
         n_list = []
         v_list = []
@@ -296,7 +328,6 @@ class ComboMaxentFeatEncoding(object):
 
         phi_m = self._phi_m[m_list]
         encoding.append(phi_m)
-
         return encoding
 
     def bil_u_encode(self, tok):
@@ -314,7 +345,6 @@ class ComboMaxentFeatEncoding(object):
             for fname, fval in featureset.items():
                 if (fname, fval) in self._mapping_v:
                     encoding.append((self._mapping_v[fname, fval], 1))
-
         return encoding
 
     def labels(self):
@@ -327,7 +357,7 @@ class ComboMaxentFeatEncoding(object):
         return self._length_v
 
     def shape(self):
-        return self._phi_m.shape[1], self._phi_m.shape[1]
+        return self._shape
 
     @classmethod
     def train(cls, train_toks, phi_h, phi_m, map_h, map_m, pptype, labels=None, cols=1000):

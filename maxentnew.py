@@ -38,9 +38,6 @@ def calculate_estimated_fcount(classifier, train_toks, encoding):
                 for (fid, fval) in encoding.encode(tok, label):
                     fcount_v[fid] += prob * fval
 
-    for tok, l in train_toks:
-        pdist = classifier.prob_classify(tok)
-
     return fcount_n, fcount_v
 
 
