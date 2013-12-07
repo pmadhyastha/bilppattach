@@ -7,6 +7,12 @@ from time import time
 np.seterr(all='raise')
 
 
+def proximal_op(matrix, nu):
+        return np.sign(matrix) * np.maximum(np.abs(matrix) - nu, 0.)
+
+def proximal_l2(matrix, nu):
+    return ((1./(1.+nu)) * matrix)
+
 #def extract_rep(matrix, cols=0):
 #    if cols is 0:
 #        cols = matrix.shape[1]
@@ -425,7 +431,7 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
 #
     print ('-------------------------------------Training for %d iterations------------------------------------' % max_iter)
     print ('---------------------------------------------------------------------------------------------------')
-    print ('     Iteration         -LogLik          Norms(bn, ln, bv, lv)      Accuracy      Time    DevelAccuracy')
+    print ('     Iteration         Objective          Norms(bn, ln, bv, lv)      Accuracy      Time    DevelAccuracy')
     print ('---------------------------------------------------------------------------------------------------')
 #    wscale_bn = 1
 #    wscale_ln = 1
@@ -457,43 +463,63 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
         weight_lny = classifier.weight_ln()
 
         if l_penalty==None and  b_penalty==None:
+
+            bn_norm = np.linalg.norm(weight_bny, ord=2)
+            ln_norm = np.linalg.norm(weight_lny, ord=2)
+            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+            lv_norm = np.linalg.norm(weight_lvy, ord=2)
+            combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+            objective = ll
             t2 = time()
             print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, ll, np.linalg.norm(weight_bny, ord=2),
-                     np.linalg.norm(weight_lny, ord=2),
-                     np.linalg.norm(weight_bvy, ord=2),
-                     np.linalg.norm(weight_lvy, ord=2), acc, t2-t1, devacc), )
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
             t1 = time()
             weight_bny -= eta * ((tau_b * grad_bn) / np.sqrt(itr))
             weight_bvy -= eta * ((tau_b * grad_bv) / np.sqrt(itr))
             weight_lvy -= eta * ((tau_l * grad_lv) / np.sqrt(itr))
             weight_lny -= eta * ((tau_l * grad_ln) / np.sqrt(itr))
+
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
         if l_penalty=='l1' and b_penalty=='l1':
 
+            bn_norm = np.linalg.norm(weight_bny, ord=1)
+            ln_norm = np.linalg.norm(weight_lny, ord=1)
+            bv_norm = np.linalg.norm(weight_bvy, ord=1)
+            lv_norm = np.linalg.norm(weight_lvy, ord=1)
+
+            combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+
+            objective = ll + combo_norm
+
             t2 = time()
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f    |'
-                   %(itr, ll, np.linalg.norm(weight_bny, ord=1),
-                     np.linalg.norm(weight_lny, ord=1),
-                     np.linalg.norm(weight_bvy, ord=1),
-                     np.linalg.norm(weight_lvy, ord=1), acc, t2-t1, devacc))
+
+            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
+
             t1 = time()
 
-            nu_l = 1 / LC_l
-            nu_b = 1 / LC_b
+            nu_l = tau_l / LC_l
+            nu_b = tau_b / LC_b
 
-            temp_by_n = weight_bny - (tau_b * grad_bn) / LC_b
-            temp_ly_n = weight_lny - (tau_l * grad_ln) / LC_l
-            temp_by_v = weight_bvy - (tau_b * grad_bv) / LC_b
-            temp_ly_v = weight_lvy - (tau_l * grad_lv) / LC_l
+            temp_by_n = weight_bny - grad_bn / LC_b
+            temp_ly_n = weight_lny - grad_ln / LC_l
+            temp_by_v = weight_bvy - grad_bv / LC_b
+            temp_ly_v = weight_lvy - grad_lv / LC_l
 
-            weight_bnxp1 = np.where(temp_by_n > 0, np.maximum(temp_by_n - nu_b, 0), np.minimum(temp_by_n + nu_b, 0))
-            weight_lnxp1 = np.where(temp_ly_n > 0, np.maximum(temp_ly_n - nu_l, 0), np.minimum(temp_ly_n + nu_l, 0))
-            weight_bvxp1 = np.where(temp_by_v > 0, np.maximum(temp_by_v - nu_b, 0), np.minimum(temp_by_n + nu_b, 0))
-            weight_lvxp1 = np.where(temp_ly_v > 0, np.maximum(temp_ly_v - nu_l, 0), np.minimum(temp_ly_v + nu_l, 0))
+            weight_bnxp1 = proximal_op(temp_by_n, nu_b)
+            weight_lnxp1 = proximal_op(temp_ly_n, nu_l)
+            weight_bvxp1 = proximal_op(temp_by_v, nu_b)
+            weight_lvxp1 = proximal_op(temp_ly_v, nu_l)
+
+#            weight_bnxp1 = np.where(temp_by_n > 0, np.maximum(temp_by_n - nu_b, 0), np.minimum(temp_by_n + nu_b, 0))
+#            weight_lnxp1 = np.where(temp_ly_n > 0, np.maximum(temp_ly_n - nu_l, 0), np.minimum(temp_ly_n + nu_l, 0))
+#            weight_bvxp1 = np.where(temp_by_v > 0, np.maximum(temp_by_v - nu_b, 0), np.minimum(temp_by_n + nu_b, 0))
+#            weight_lvxp1 = np.where(temp_ly_v > 0, np.maximum(temp_ly_v - nu_l, 0), np.minimum(temp_ly_v + nu_l, 0))
 
             lr = (lam_k - 1) / lam_kp1
 
@@ -501,8 +527,9 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
             weight_lnyp1 = weight_lnxp1 + lr * (weight_lnxp1 - weight_lnx)
             weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
             weight_lvyp1 = weight_lvxp1 + lr * (weight_lvxp1 - weight_lvx)
+
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
             weight_bnx = weight_bnxp1
@@ -517,21 +544,31 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
 
 
         if l_penalty=='l1' and b_penalty=='nn':
+
+            bn_norm = np.sum(bnS)
+            ln_norm = np.linalg.norm(weight_lny, ord=1)
+            bv_norm = np.sum(bvS)
+            lv_norm = np.linalg.norm(weight_lvy, ord=1)
+
+            combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+
+            objective = ll + combo_norm
+
             t2 = time()
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f    |'
-                   %(itr, ll, np.sum(bnS),
-                     np.linalg.norm(weight_lny, ord=1),
-                     np.sum(bvS),
-                     np.linalg.norm(weight_lvy, ord=1), acc, t2-t1, devacc))
+
+            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
+
             t1 = time()
 
-            nu_b = 1 / LC_b
-            nu_l = 1 / LC_l
+            nu_b = tau_b / LC_b
+            nu_l = tau_l / LC_l
 
-            temp_by_n = weight_bny - (tau_b * grad_bn) / LC_b
-            temp_ly_n = weight_lny - (tau_l * grad_ln) / LC_l
-            temp_by_v = weight_bvy - (tau_b * grad_bv) / LC_b
-            temp_ly_v = weight_lvy - (tau_l * grad_lv) / LC_l
+            temp_by_n = weight_bny - grad_bn / LC_b
+            temp_ly_n = weight_lny - grad_ln / LC_l
+            temp_by_v = weight_bvy - grad_bv / LC_b
+            temp_ly_v = weight_lvy - grad_lv / LC_l
 
             bnU, bnS, bnVt = np.linalg.svd(temp_by_n)
             bvU, bvS, bvVt = np.linalg.svd(temp_by_v)
@@ -541,10 +578,11 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
 
             weight_bnxp1 = np.dot(bnU, np.dot(np.diag(bnS), bnVt))
             weight_bvxp1 = np.dot(bvU, np.dot(np.diag(bvS), bvVt))
-            weight_lnxp1 = np.where(temp_ly_n > 0, np.maximum(temp_ly_n - nu_l, 0), np.minimum(temp_ly_n + nu_l, 0))
-            weight_lvxp1 = np.where(temp_ly_v > 0, np.maximum(temp_ly_v - nu_l, 0), np.minimum(temp_ly_v + nu_l, 0))
+            weight_lnxp1 = proximal_op(temp_ly_n, nu_l)
+            weight_lvxp1 = proximal_op(temp_ly_v, nu_l)
 
             lr = (lam_k - 1) / lam_kp1
+
             weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
             weight_lnyp1 = weight_lnxp1 + lr * (weight_lnxp1 - weight_lnx)
             weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
@@ -559,18 +597,27 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
             weight_lvx = weight_lvxp1
             weight_bvy = weight_bvyp1
             weight_lvy = weight_lvyp1
+
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
         if l_penalty=='l2' and b_penalty=='l2':
 
+            bn_norm = np.linalg.norm(weight_bny, ord=2)
+            ln_norm = np.linalg.norm(weight_lny, ord=2)
+            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+            lv_norm = np.linalg.norm(weight_lvy, ord=2)
+
+            combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+
+            objective = (ll+combo_norm)
+
             t2 = time()
             print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, ll, np.linalg.norm(weight_bny, ord=2),
-                     np.linalg.norm(weight_lny, ord=2),
-                     np.linalg.norm(weight_bvy, ord=2),
-                     np.linalg.norm(weight_lvy, ord=2), acc, t2-t1, devacc), )
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
+
             t1 = time()
 
             weight_bny -= eta * (grad_bn + np.dot(tau_b, weight_bny)) / np.sqrt(itr)
@@ -578,48 +625,86 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
             weight_lvy -= eta * (grad_lv + np.dot(tau_l, weight_lvy)) / np.sqrt(itr)
             weight_lny -= eta * (grad_ln + np.dot(tau_l, weight_lny))  / np.sqrt(itr)
 
-            ll += (tau_b*((np.linalg.norm(weight_bny)**2) + (np.linalg.norm(weight_bvy)**2)) + tau_l*((np.linalg.norm(weight_lny)**2) + (np.linalg.norm(weight_lvy)**2)))
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
         if l_penalty=='l2p' and b_penalty=='l2p':
 
+            bn_norm = np.linalg.norm(weight_bny, ord=2)
+            ln_norm = np.linalg.norm(weight_lny, ord=2)
+            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+            lv_norm = np.linalg.norm(weight_lvy, ord=2)
+
+            combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+
+            objective = ll + combo_norm
+
             t2 = time()
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    |'
-                   %(itr, ll, np.linalg.norm(weight_bny, ord=2),
-                     np.linalg.norm(weight_lny, ord=2),
-                     np.linalg.norm(weight_bvy, ord=2),
-                     np.linalg.norm(weight_lvy, ord=2), acc, t2-t1))
+
+            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
+
             t1 = time()
 
-            weight_bny -= (grad_bn) / np.sqrt(itr)
-            weight_bvy -= (grad_bv) / np.sqrt(itr)
-            weight_lvy -= (grad_lv) / np.sqrt(itr)
-            weight_lny -= (grad_ln)  / np.sqrt(itr)
+            nu_l = tau_l / LC_l
+            nu_b = tau_b / LC_b
 
-            weight_bvy = eta * ((weight_bvy / np.linalg.norm(weight_bvy, ord=2)) * tau_b)
-            weight_bny = eta * ((weight_bny / np.linalg.norm(weight_bny, ord=2)) * tau_b)
-            weight_lvy = eta * ((weight_lvy / np.linalg.norm(weight_lvy, ord=2)) * tau_l)
-            weight_lny = eta * ((weight_lny / np.linalg.norm(weight_lny, ord=2)) * tau_l)
+            temp_by_n = weight_bny - grad_bn / LC_b
+            temp_ly_n = weight_lny - grad_ln / LC_l
+            temp_by_v = weight_bvy - grad_bv / LC_b
+            temp_ly_v = weight_lvy - grad_lv / LC_l
+
+            weight_bnxp1 = proximal_l2(temp_by_n, nu_b)
+            weight_lnxp1 = proximal_l2(temp_ly_n, nu_l)
+            weight_bvxp1 = proximal_l2(temp_by_v, nu_b)
+            weight_lvxp1 = proximal_l2(temp_ly_v, nu_l)
+
+            lr = (lam_k - 1) / lam_kp1
+
+            weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
+            weight_lnyp1 = weight_lnxp1 + lr * (weight_lnxp1 - weight_lnx)
+            weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
+            weight_lvyp1 = weight_lvxp1 + lr * (weight_lvxp1 - weight_lvx)
 
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
+            devac.append(devacc)
 
+            weight_bnx = weight_bnxp1
+            weight_lnx = weight_lnxp1
+            weight_bny = weight_bnyp1
+            weight_lny = weight_lnyp1
+
+            weight_bvx = weight_bvxp1
+            weight_lvx = weight_lvxp1
+            weight_bvy = weight_bvyp1
+            weight_lvy = weight_lvyp1
 
         if l_penalty=='l2' and b_penalty=='nn':
+
+            bn_norm = np.sum(bnS)
+            ln_norm = np.linalg.norm(weight_lny, ord=2)
+            bv_norm = np.sum(bvS)
+            lv_norm = np.linalg.norm(weight_lvy, ord=2)
+
+            combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+
+            objective = ll + combo_norm
+
             t2 = time()
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    |'
-                   %(itr, ll, np.sum(bnS),
-                     np.linalg.norm(weight_lny, ord=2),
-                     np.sum(bvS),
-                     np.linalg.norm(weight_lvy, ord=2), acc, t2-t1))
+
+            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
+
             t1 = time()
 
-            nu_b = 1 / LC_b
+            nu_b = tau_b / LC_b
 
-            temp_by_n = weight_bny - (tau_b * grad_bn) / LC_b
-            temp_by_v = weight_bvy - (tau_b * grad_bv) / LC_b
+            temp_by_n = weight_bny - grad_bn / LC_b
+            temp_by_v = weight_bvy - grad_bv / LC_b
 
             bnU, bnS, bnVt = np.linalg.svd(temp_by_n)
             bvU, bvS, bvVt = np.linalg.svd(temp_by_v)
@@ -637,36 +722,46 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
             weight_bny = weight_bnyp1
             weight_bvx = weight_bvxp1
             weight_bvy = weight_bvyp1
-            weight_lvy -= (grad_lv + np.dot(tau_l, weight_lvy)) / np.sqrt(itr)
-            weight_lny -= (grad_ln + np.dot(tau_l, weight_lny))  / np.sqrt(itr)
+            weight_lvy -= (grad_lv + np.dot(tau_l, weight_lvy))
+            weight_lny -= (grad_ln + np.dot(tau_l, weight_lny))
 
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
         if l_penalty=='l2' and b_penalty=='l1':
 
+            bn_norm = np.linalg.norm(weight_bny, ord=1)
+            ln_norm = np.linalg.norm(weight_lny, ord=2)
+            bv_norm = np.linalg.norm(weight_bvy, ord=1)
+            lv_norm = np.linalg.norm(weight_lvy, ord=2)
+
+            combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+
+            objective = ll + combo_norm
+
             t2 = time()
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    |  %9.3f |'
-                   %(itr, ll, np.linalg.norm(weight_bny, ord=1),
-                     np.linalg.norm(weight_lny, ord=2),
-                     np.linalg.norm(weight_bvy, ord=1),
-                     np.linalg.norm(weight_lvy, ord=2), acc, t2-t1, devacc))
+
+            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
+
             t1 = time()
 
-            nu_b = 1 / LC_b
-            temp_by_n = weight_bny - (tau_b * grad_bn) / LC_b
-            temp_by_v = weight_bvy - (tau_b * grad_bv) / LC_b
+            nu_b = tau_b / LC_b
+            temp_by_n = weight_bny - grad_bn / LC_b
+            temp_by_v = weight_bvy - grad_bv / LC_b
 
-            weight_bnxp1 = np.where(temp_by_n > 0, np.maximum(temp_by_n - nu_b, 0), np.minimum(temp_by_n + nu_b, 0))
-            weight_bvxp1 = np.where(temp_by_v > 0, np.maximum(temp_by_v - nu_b, 0), np.minimum(temp_by_n + nu_b, 0))
+            weight_bnxp1 =  proximal_op(temp_by_n, nu_b)
+            weight_bvxp1 =  proximal_op(temp_by_v, nu_b)
 
             lr = (lam_k - 1) / lam_kp1
 
             weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
             weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
+
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
             weight_bnx = weight_bnxp1
@@ -674,43 +769,216 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
 
             weight_bvx = weight_bvxp1
             weight_bvy = weight_bvyp1
-            weight_lvy -= (grad_lv + np.dot(tau_l, weight_lvy)) / np.sqrt(itr)
-            weight_lny -= (grad_ln + np.dot(tau_l, weight_lny))  / np.sqrt(itr)
+
+            weight_lvy -= (grad_lv + np.dot(tau_l, weight_lvy))
+            weight_lny -= (grad_ln + np.dot(tau_l, weight_lny))
 
         if l_penalty=='l1' and b_penalty=='l2':
 
+            bn_norm = np.linalg.norm(weight_bny, ord=2)
+            ln_norm = np.linalg.norm(weight_lny, ord=1)
+            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+            lv_norm = np.linalg.norm(weight_lvy, ord=1)
+
+            combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+
+            objective = ll + combo_norm
+
             t2 = time()
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    |'
-                   %(itr, ll, np.linalg.norm(weight_bny, ord=2),
-                     np.linalg.norm(weight_lny, ord=1),
-                     np.linalg.norm(weight_bvy, ord=2),
-                     np.linalg.norm(weight_lvy, ord=1), acc, t2-t1))
+
+            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
             t1 = time()
 
-            nu_l = 1 / LC_l
+            nu_l = tau_l / LC_l
 
-            temp_ly_n = weight_lny - (tau_l * grad_ln) / LC_l
-            temp_ly_v = weight_lvy - (tau_l * grad_lv) / LC_l
+            temp_ly_n = weight_lny - grad_ln / LC_l
+            temp_ly_v = weight_lvy - grad_lv / LC_l
 
-            weight_lnxp1 = np.where(temp_ly_n > 0, np.maximum(temp_ly_n - nu_l, 0), np.minimum(temp_ly_n + nu_l, 0))
-            weight_lvxp1 = np.where(temp_ly_v > 0, np.maximum(temp_ly_v - nu_l, 0), np.minimum(temp_ly_v + nu_l, 0))
+            weight_lnxp1 = proximal_op(temp_ly_n, nu_l)
+            weight_lvxp1 = proximal_op(temp_ly_v, nu_l)
 
             lr = (lam_k - 1) / lam_kp1
 
             weight_lnyp1 = weight_lnxp1 + lr * (weight_lnxp1 - weight_lnx)
             weight_lvyp1 = weight_lvxp1 + lr * (weight_lvxp1 - weight_lvx)
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
+            devac.append(devacc)
 
             weight_lnx = weight_lnxp1
             weight_lny = weight_lnyp1
 
             weight_lvx = weight_lvxp1
             weight_lvy = weight_lvyp1
-            weight_bny -= (grad_bn + np.dot(tau_b, weight_bny)) / np.sqrt(itr)
-            weight_bvy -= (grad_bv + np.dot(tau_b, weight_bvy)) / np.sqrt(itr)
+            weight_bny -= (grad_bn + np.dot(tau_b, weight_bny))
+            weight_bvy -= (grad_bv + np.dot(tau_b, weight_bvy))
 
+        if l_penalty=='l1' and b_penalty=='l2p':
 
+            bn_norm = np.linalg.norm(weight_bny, ord=2)
+            ln_norm = np.linalg.norm(weight_lny, ord=1)
+            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+            lv_norm = np.linalg.norm(weight_lvy, ord=1)
+
+            combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+
+            objective = ll + combo_norm
+
+            t2 = time()
+
+            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
+
+            t1 = time()
+
+            nu_l = tau_l / LC_l
+            nu_b = tau_b / LC_b
+
+            temp_by_n = weight_bny - grad_bn / LC_b
+            temp_ly_n = weight_lny - grad_ln / LC_l
+            temp_by_v = weight_bvy - grad_bv / LC_b
+            temp_ly_v = weight_lvy - grad_lv / LC_l
+
+            weight_bnxp1 = proximal_l2(temp_by_n, nu_b)
+            weight_lnxp1 = proximal_op(temp_ly_n, nu_l)
+            weight_bvxp1 = proximal_l2(temp_by_v, nu_b)
+            weight_lvxp1 = proximal_op(temp_ly_v, nu_l)
+
+            lr = (lam_k - 1) / lam_kp1
+
+            weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
+            weight_lnyp1 = weight_lnxp1 + lr * (weight_lnxp1 - weight_lnx)
+            weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
+            weight_lvyp1 = weight_lvxp1 + lr * (weight_lvxp1 - weight_lvx)
+
+            trac.append(acc)
+            trll.append(objective)
+            devac.append(devacc)
+
+            weight_bnx = weight_bnxp1
+            weight_lnx = weight_lnxp1
+            weight_bny = weight_bnyp1
+            weight_lny = weight_lnyp1
+
+            weight_bvx = weight_bvxp1
+            weight_lvx = weight_lvxp1
+            weight_bvy = weight_bvyp1
+            weight_lvy = weight_lvyp1
+
+        if l_penalty=='l2p' and b_penalty=='nn':
+
+            bn_norm = np.sum(bnS)
+            ln_norm = np.linalg.norm(weight_lny, ord=2)
+            bv_norm = np.sum(bvS)
+            lv_norm = np.linalg.norm(weight_lvy, ord=2)
+
+            combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+
+            objective = ll + combo_norm
+
+            t2 = time()
+
+            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
+
+            t1 = time()
+
+            nu_b = tau_b / LC_b
+            nu_l = tau_l / LC_l
+
+            temp_by_n = weight_bny - grad_bn / LC_b
+            temp_ly_n = weight_lny - grad_ln / LC_l
+            temp_by_v = weight_bvy - grad_bv / LC_b
+            temp_ly_v = weight_lvy - grad_lv / LC_l
+
+            bnU, bnS, bnVt = np.linalg.svd(temp_by_n)
+            bvU, bvS, bvVt = np.linalg.svd(temp_by_v)
+
+            bnS = np.maximum(bnS - nu_b, 0)
+            bvS = np.maximum(bvS - nu_b, 0)
+
+            weight_bnxp1 = np.dot(bnU, np.dot(np.diag(bnS), bnVt))
+            weight_bvxp1 = np.dot(bvU, np.dot(np.diag(bvS), bvVt))
+            weight_lnxp1 = proximal_l2(temp_ly_n, nu_l)
+            weight_lvxp1 = proximal_l2(temp_ly_v, nu_l)
+
+            lr = (lam_k - 1) / lam_kp1
+
+            weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
+            weight_lnyp1 = weight_lnxp1 + lr * (weight_lnxp1 - weight_lnx)
+            weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
+            weight_lvyp1 = weight_lvxp1 + lr * (weight_lvxp1 - weight_lvx)
+
+            weight_bnx = weight_bnxp1
+            weight_lnx = weight_lnxp1
+            weight_bny = weight_bnyp1
+            weight_lny = weight_lnyp1
+
+            weight_bvx = weight_bvxp1
+            weight_lvx = weight_lvxp1
+            weight_bvy = weight_bvyp1
+            weight_lvy = weight_lvyp1
+
+            trac.append(acc)
+            trll.append(objective)
+            devac.append(devacc)
+
+        if l_penalty=='l2p' and b_penalty=='l1':
+
+            bn_norm = np.linalg.norm(weight_bny, ord=1)
+            ln_norm = np.linalg.norm(weight_lny, ord=2)
+            bv_norm = np.linalg.norm(weight_bvy, ord=1)
+            lv_norm = np.linalg.norm(weight_lvy, ord=2)
+
+            combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+
+            objective = ll + combo_norm
+
+            t2 = time()
+
+            print ('|%9d     |%14.7f    | (%2.3f, %2.3f, %2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                   %(itr, objective, bn_norm, ln_norm,
+                     bv_norm, lv_norm, acc, t2-t1, devacc), )
+
+            t1 = time()
+
+            nu_l = tau_l / LC_l
+            nu_b = tau_b / LC_b
+
+            temp_by_n = weight_bny - grad_bn / LC_b
+            temp_ly_n = weight_lny - grad_ln / LC_l
+            temp_by_v = weight_bvy - grad_bv / LC_b
+            temp_ly_v = weight_lvy - grad_lv / LC_l
+
+            weight_bnxp1 = proximal_op(temp_by_n, nu_b)
+            weight_lnxp1 = proximal_l2(temp_ly_n, nu_l)
+            weight_bvxp1 = proximal_op(temp_by_v, nu_b)
+            weight_lvxp1 = proximal_l2(temp_ly_v, nu_l)
+
+            lr = (lam_k - 1) / lam_kp1
+
+            weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
+            weight_lnyp1 = weight_lnxp1 + lr * (weight_lnxp1 - weight_lnx)
+            weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
+            weight_lvyp1 = weight_lvxp1 + lr * (weight_lvxp1 - weight_lvx)
+
+            trac.append(acc)
+            trll.append(objective)
+            devac.append(devacc)
+
+            weight_bnx = weight_bnxp1
+            weight_lnx = weight_lnxp1
+            weight_bny = weight_bnyp1
+            weight_lny = weight_lnyp1
+
+            weight_bvx = weight_bvxp1
+            weight_lvx = weight_lvxp1
+            weight_bvy = weight_bvyp1
+            weight_lvy = weight_lvyp1
 
         classifier.set_weights(weight_bny, weight_bvy, weight_lny, weight_lvy)
         lam_k = lam_kp1
