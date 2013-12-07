@@ -14,6 +14,13 @@ np.seterr(all='raise')
 
 #    return retain_cols, skp.normalize(matrix.tocsc()[:, retain_cols].tocsr(), norm='l1', axis=1)
 
+def proximal_op(matrix, nu):
+        return np.sign(matrix) * np.maximum(np.abs(matrix) - nu, 0.)
+
+def proximal_l2(matrix, nu):
+    return ((1./(1.+nu)) * matrix)
+
+
 
 def data_extract(train_tokens, pptype):
     '''
@@ -193,19 +200,25 @@ class BilinearMaxentFeatEncoding(object):
 
         trn = self._train_toks
         V, N, M = self.bil_encode(trn)
-        emp_nfcount = np.dot(N.transpose(), M)
-        emp_vfcount = np.dot(V.transpose(), M)
+        emp_nfcount = np.matrix(np.zeros(self.shape())
+        emp_vfcount = np.matrix(np.zeros(self.shape())
         fcount_bil = {}
 
         for tok, label in self._train_toks:
             v, n, m = self.bil_encode([(tok, label)])
             vm = tok[0]+'_'+tok[3]
             nm = tok[1]+'_'+tok[3]
+            score_vm = v.T*m
+            score_nm = n.T*m
 
             if vm not in fcount_bil:
-                fcount_bil[vm] = np.dot(v.transpose(), m)
+                fcount_bil[vm] = score_vm
+            if label == 'v':
+                emp_vfcount += score_vm
             if nm not in fcount_bil:
-                fcount_bil[nm] = np.dot(n.transpose(), m)
+                fcount_bil[nm] = score_nm
+            if label == 'n':
+                emp_nfcount += score_nm
 
         self._emps = (emp_vfcount, emp_nfcount, fcount_bil)
 
@@ -327,13 +340,13 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
 
             t1 = time()
 
-            nu = 1 / LC
+            nu = tau / LC
 
-            temp_by_n = weight_bny - (tau * grad_bn) / LC
-            temp_by_v = weight_bvy - (tau * grad_bv) / LC
+            temp_by_n = weight_bny - grad_bn / LC
+            temp_by_v = weight_bvy - grad_bv / LC
 
-            weight_bnxp1 = np.where(temp_by_n > 0, np.maximum(temp_by_n - nu, 0), np.minimum(temp_by_n + nu, 0))
-            weight_bvxp1 = np.where(temp_by_v > 0, np.maximum(temp_by_v - nu, 0), np.minimum(temp_by_n + nu, 0))
+            weight_bnxp1 = proximal_op(temp_by_n, nu)
+            weight_bvxp1 = proximal_op(temp_by_v, nu)
 
             lr = (lam_k - 1) / lam_kp1
 
@@ -360,10 +373,10 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
 
             t1 = time()
 
-            nu = 1 / LC
+            nu = tau / LC
 
-            temp_by_n = weight_bny - (tau * grad_bn) / LC
-            temp_by_v = weight_bvy - (tau * grad_bv) / LC
+            temp_by_n = weight_bny - grad_bn / LC
+            temp_by_v = weight_bvy - grad_bv / LC
 
             bnU, bnS, bnVt = np.linalg.svd(temp_by_n)
             bvU, bvS, bvVt = np.linalg.svd(temp_by_v)
@@ -402,6 +415,39 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
             trac.append(acc)
             trll.append(ll)
             devac.append(devacc)
+
+        if penalty=='l2p':
+
+            t2 = time()
+            print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                   %(itr, ll, np.linalg.norm(weight_bny, ord=1),
+                     np.linalg.norm(weight_bvy, ord=2),
+                     acc, t2-t1, devacc), )
+
+            t1 = time()
+
+            nu = tau / LC
+
+            temp_by_n = weight_bny - grad_bn / LC
+            temp_by_v = weight_bvy - grad_bv / LC
+
+            weight_bnxp1 = proximal_l2(temp_by_n, nu)
+            weight_bvxp1 = proximal_l2(temp_by_v, nu)
+
+            lr = (lam_k - 1) / lam_kp1
+
+            weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
+            weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
+            trac.append(acc)
+            trll.append(ll)
+            devac.append(devacc)
+
+            weight_bnx = weight_bnxp1
+            weight_bny = weight_bnyp1
+
+            weight_bvx = weight_bvxp1
+            weight_bvy = weight_bvyp1
+
 
         classifier.set_weights(weight_bny, weight_bvy)
         lam_k = lam_kp1
