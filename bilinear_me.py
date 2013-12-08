@@ -47,6 +47,7 @@ def accuracy(encoding, classifier, gold):
     score = []
     total = 0
     equal = 0
+    eqstuff = []
 
     for (tok, label) in gold:
         total += 1
@@ -70,10 +71,13 @@ def accuracy(encoding, classifier, gold):
         elif np.exp(noun) < np.exp(verb) and label == 'v':
             score.append(1)
         elif np.exp(noun) == np.exp(verb):
+            eqstuff.append([tok, label])
             equal += 1
 
     if equal > 0:
         print ('number of equal scores = ', equal)
+    if len(eqstuff) < 20:
+        print (eqstuff)
     return float(np.sum(score)) / total
 
 class BilinearMaxent(object):
@@ -199,9 +203,8 @@ class BilinearMaxentFeatEncoding(object):
     def compute_emps(self):
 
         trn = self._train_toks
-        V, N, M = self.bil_encode(trn)
-        emp_nfcount = np.matrix(np.zeros(self.shape())
-        emp_vfcount = np.matrix(np.zeros(self.shape())
+        emp_nfcount = np.matrix(np.zeros(self.shape()))
+        emp_vfcount = np.matrix(np.zeros(self.shape()))
         fcount_bil = {}
 
         for tok, label in self._train_toks:
@@ -318,25 +321,37 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
         weight_bvy = classifier.weight_bv()
 
         if penalty==None:
+
+            bn_norm = np.linalg.norm(weight_bny, ord=2)
+            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+
+            sum_norm = (tau * bn_norm) + (tau * bv_norm)
+
+            objective = ll #+ sum_norm
+
             t2 = time()
+
             print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, ll, np.linalg.norm(weight_bny, ord=2),
-                     np.linalg.norm(weight_bvy, ord=2),
-                     acc, t2-t1, devacc), )
+                   %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
+
             t1 = time()
             weight_bny -= np.dot(eta, (np.dot(tau, grad_bn) / np.sqrt(itr)))
             weight_bvy -= np.dot(eta, (np.dot(tau, grad_bv) / np.sqrt(itr)))
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
         if penalty=='l1':
 
+            bn_norm = np.linalg.norm(weight_bny, ord=1)
+            bv_norm = np.linalg.norm(weight_bvy, ord=1)
+
+            objective = ll + sum_norm
+
             t2 = time()
+
             print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, ll, np.linalg.norm(weight_bny, ord=1),
-                     np.linalg.norm(weight_bvy, ord=1),
-                     acc, t2-t1, devacc), )
+                   %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
 
             t1 = time()
 
@@ -353,7 +368,7 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
             weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
             weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
             weight_bnx = weight_bnxp1
@@ -364,12 +379,18 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
 
 
         if penalty=='nn':
+
+            bn_norm = np.sum(bnS)
+            bv_norm = np.sum(bvS)
+
+            sum_norm = (tau * bn_norm) + (tau * bv_norm)
+
+            objective = ll + sum_norm
+
             t2 = time()
 
             print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, ll, np.sun(bnS),
-                     np.sum(bnS),
-                     acc, t2-t1, devacc), )
+                   %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
 
             t1 = time()
 
@@ -397,32 +418,44 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
             weight_bvx = weight_bvxp1
             weight_bvy = weight_bvyp1
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
         if penalty=='l2':
 
+            bn_norm = np.linalg.norm(weight_bny, ord=2)
+            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+
+            sum_norm = (tau * bn_norm) + (tau * bv_norm)
+
+            objective = ll + sum_norm
+
             t2 = time()
+
             print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, ll, np.linalg.norm(weight_bny, ord=2),
-                     np.linalg.norm(weight_bvy, ord=2),
-                     acc, t2-t1, devacc), )
+                   %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
 
             t1 = time()
 
             weight_bny -= eta * (grad_bn + np.dot(tau, weight_bny)) / np.sqrt(itr)
             weight_bvy -= eta * (grad_bv + np.dot(tau, weight_bvy)) / np.sqrt(itr)
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
         if penalty=='l2p':
 
+            bn_norm = np.linalg.norm(weight_bny, ord=2)
+            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+
+            sum_norm = (tau * bn_norm) + (tau * bv_norm)
+
+            objective = ll + sum_norm
+
             t2 = time()
+
             print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, ll, np.linalg.norm(weight_bny, ord=1),
-                     np.linalg.norm(weight_bvy, ord=2),
-                     acc, t2-t1, devacc), )
+                   %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
 
             t1 = time()
 
@@ -439,7 +472,7 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
             weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
             weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
             trac.append(acc)
-            trll.append(ll)
+            trll.append(objective)
             devac.append(devacc)
 
             weight_bnx = weight_bnxp1
