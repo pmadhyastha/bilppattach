@@ -90,15 +90,15 @@ if inp == 'l2l2':
         for cb in tau_vals_a:
             for e in eta:
                 main_string = str(e)+','+str(cls)+','+str(cb)
-#                try:
-                print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and eta = ', e
-                cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=2, eta=e, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2', b_penalty='l2')
-                np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[1], fmt='%f')
-                np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[2], fmt='%f')
-                np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[3], fmt='%f')
-                fmins[main_string] = minlog(cl[2])
-#                except:
-#                     print 'problem with eta = ', e, ' cls = ', cls, ' cb ', cb
+                try:
+                    print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and eta = ', e
+                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=2, eta=e, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2', b_penalty='l2')
+                    np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[1], fmt='%f')
+                    np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[2], fmt='%f')
+                    np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[3], fmt='%f')
+                    fmins[main_string] = minlog(cl[2])
+                except:
+                     print 'problem with eta = ', e, ' cls = ', cls, ' cb ', cb
 
     mstr = sorted(fmins, key=fmins.get)
     final = mstr
@@ -124,15 +124,15 @@ if inp == 'l2pl2p':
         for cb in tau_vals_a:
             for lc in lcvals:
                 main_string = str(lc)+','+str(cls)+','+str(cb)
-#                try:
-                print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and lc = ', lc
-                cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=2, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2p', b_penalty='l2p')
-                np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[1], fmt='%f')
-                np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[2], fmt='%f')
-                np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[3], fmt='%f')
-                fmins[main_string] = minlog(cl[2])
-#                except:
-#                     print 'problem with eta = ', e, ' cls = ', cls, ' cb ', cb
+                try:
+                    print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and lc = ', lc
+                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=2, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2p', b_penalty='l2p')
+                    np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[1], fmt='%f')
+                    np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[2], fmt='%f')
+                    np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[3], fmt='%f')
+                    fmins[main_string] = minlog(cl[2])
+                except:
+                     print 'problem with eta = ', e, ' cls = ', cls, ' cb ', cb
 
     mstr = sorted(fmins, key=fmins.get)
     final = mstr
@@ -225,12 +225,12 @@ if inp == 'l1nn':
             for lc in lcvals:
                 main_string = str(lc)+','+str(cls)+','+str(cb)
                 try:
-                print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and lc = ', lc
-                cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=2, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l1', b_penalty='nn')
-                np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[1], fmt='%f')
-                np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[2], fmt='%f')
-                np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[3], fmt='%f')
-                fmins[main_string] = minlog(cl[2])
+                    print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and lc = ', lc
+                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=2, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l1', b_penalty='nn')
+                    np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[1], fmt='%f')
+                    np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[2], fmt='%f')
+                    np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[3], fmt='%f')
+                    fmins[main_string] = minlog(cl[2])
                 except:
                      print 'problem with eta = ', e, ' cls = ', cls, ' cb ', cb
 
