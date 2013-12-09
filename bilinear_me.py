@@ -71,14 +71,16 @@ def accuracy(encoding, classifier, gold):
         elif np.exp(noun) < np.exp(verb) and label == 'v':
             score.append(1)
         elif np.exp(noun) == np.exp(verb):
-            eqstuff.append([tok, label])
+            eqstuff.append([tok, label, np.sum(n), np.sum(v), np.sum(m), np.exp(noun), np.exp(verb) ])
             equal += 1
 
-    if equal > 0:
-        print ('number of equal scores = ', equal)
-    if len(eqstuff) < 20:
-        print (eqstuff)
+#    if equal > 0:
+#        print ('number of equal scores = ', equal)
+#    if len(eqstuff) < 20:
+#        print (eqstuff)
+
     return float(np.sum(score)) / total
+
 
 class BilinearMaxent(object):
     '''
