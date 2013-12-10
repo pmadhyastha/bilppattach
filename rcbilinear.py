@@ -9,7 +9,8 @@ import sys
 
 samples = int(sys.argv[1])
 inp = str(sys.argv[2])
-#cb = float(sys.argv[3])
+eta = float(sys.argv[3])
+tau = float(sys.argv[4])
 
 traindata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in open('clean/cleantrain.txt')]
 devdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in open('clean/cleandev.txt')]
@@ -25,12 +26,12 @@ mapdh = np.loadtxt('clean/devheads.txt', dtype=str)
 mapdm = np.loadtxt('clean/devmods.txt', dtype=str)
 
 
-encoding = bilme.BilinearMaxentFeatEncoding.train(traindata, phih, phim, maph, mapm, pptype=None)
+encoding = bilme.BilinearMaxentFeatEncoding.train(traindata, phih, phim, maph, mapm, pptype='for')
 traintoks = encoding.train_toks()
 traintokens = [(co.word_features(t),l) for t,l in encoding.train_toks()]
 print 'type = ', inp, 'total samples = ', samples
 print "total training examples for the pptype - None ", len(traintoks)
-devencode = bilme.BilinearMaxentFeatEncoding.train(devdata, phidh, phidm, mapdh, mapdm, pptype=None)
+devencode = bilme.BilinearMaxentFeatEncoding.train(devdata, phidh, phidm, mapdh, mapdm, pptype='for')
 devtoks = devencode.train_toks()
 devtokens = [(co.word_features(t),l) for t,l in devencode.train_toks()]
 print "total development examples for the pptype - None ", len(devtoks)
@@ -44,37 +45,14 @@ def increasing(L):
 def minlog(L):
     val, idx = min((val, idx) for (idx, val) in enumerate(L))
     return val
-tau_vals = [1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.000000001, 0.0000000001, 0.00000000001]
-eta = [90000000, 100000000]
 if inp == 'None':
-    fmins = {}
-    tau = 1
-    for e in eta:
-        main_string = str(e)+','+str(tau)
-        try:
-            print 'calling function type ', inp, ' with tau = ', tau, ' and eta = ', e
-            cl = bilme.BilinearMaxent.train(train_toks=traintokens, algorithm='gd', max_iter=40, eta=e, devset=devtokens, tau=tau)
-            np.savetxt('lintracc25'+inp+str(samples)+'tau'+str(tau)+'eta'+str(e)+'.txt', cl[1], fmt='%f')
-            np.savetxt('linlog25'+inp+str(samples)+'tau'+str(tau)+'eta'+str(e)+'.txt', cl[2], fmt='%f')
-            np.savetxt('lindevacc25'+inp+str(samples)+'tau'+str(tau)+'eta'+str(e)+'.txt', cl[3], fmt='%f')
-            fmins[main_string] = minlog(cl[2])
-        except:
-            print 'problem with eta = ', e, ' tau = ', tau
-
-    mstr = sorted(fmins, key=fmins.get)
-    final = mstr
-    print final
-    for i in range(len(final)):
-        try:
-            val = (final[i]).split(',')
-            cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=100, eta=float(val[0]), devset=devtokens, tau=float(val[1]))
-            np.savetxt('devacc'+inp+str(samples)+'tau'+val[1]+'eta'+val[0]+'.txt', cl[3], fmt='%f')
-            np.savetxt('neglogl'+inp+str(samples)+'tau'+val[1]+'eta'+val[0]+'.txt', cl[2], fmt='%f')
-            np.savetxt('tracc'+inp+str(samples)+'tau'+val[1]+'eta'+val[0]+'.txt', cl[1], fmt='%f')
-            np.savetxt('wtln'+inp+str(samples)+'tau'+val[1]+'eta'+val[0]+'.txt', cl[0].weights_n(), fmt='%f')
-            np.savetxt('wtlv'+inp+str(samples)+'tau'+val[1]+'eta'+val[0]+'.txt', cl[0].weights_v(), fmt='%f')
-        except:
-            pass
+    print 'calling function type ', inp, ' WindowsErrorth tau = ', tau, ' and eta = ', eta
+    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, eta=eta, devset=devtoks, devencode=devencode, tau=tau)
+    np.savetxt('devacc'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[3], fmt='%f')
+    np.savetxt('neglogl'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[2], fmt='%f')
+    np.savetxt('tracc'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[1], fmt='%f')
+    np.savetxt('wtln'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[0].weights_n(), fmt='%f')
+    np.savetxt('wtlv'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[0].weights_v(), fmt='%f')
 
 elif inp == 'l2':
     fmins = {}
