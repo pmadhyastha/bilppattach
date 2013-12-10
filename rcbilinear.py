@@ -48,11 +48,11 @@ def minlog(L):
 if inp == 'None':
     print 'calling function type ', inp, ' WindowsErrorth tau = ', tau, ' and eta = ', eta
     cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, eta=eta, devset=devtoks, devencode=devencode, tau=tau)
-    np.savetxt('devacc'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[3], fmt='%f')
-    np.savetxt('neglogl'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[2], fmt='%f')
-    np.savetxt('tracc'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[1], fmt='%f')
-    np.savetxt('wtln'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[0].weights_n(), fmt='%f')
-    np.savetxt('wtlv'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[0].weights_v(), fmt='%f')
+    np.savetxt('bdevacc'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[3], fmt='%f')
+    np.savetxt('bobjective'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[2], fmt='%f')
+    np.savetxt('btracc'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[1], fmt='%f')
+    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[0].weights_bn(), fmt='%f')
+    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[0].weights_bv(), fmt='%f')
 
 elif inp == 'l2':
     fmins = {}
