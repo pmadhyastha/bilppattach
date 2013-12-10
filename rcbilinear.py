@@ -48,42 +48,21 @@ def minlog(L):
 if inp == 'None':
     print 'calling function type ', inp, ' WindowsErrorth tau = ', tau, ' and eta = ', eta
     cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, eta=eta, devset=devtoks, devencode=devencode, tau=tau)
-    np.savetxt('bdevacc'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[3], fmt='%f')
-    np.savetxt('bobjective'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[2], fmt='%f')
-    np.savetxt('btracc'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[1], fmt='%f')
-    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[0].weights_bn(), fmt='%f')
-    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+tau+'eta'+eta+'.txt', cl[0].weights_bv(), fmt='%f')
+    np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[3], fmt='%f')
+    np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[2], fmt='%f')
+    np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[1], fmt='%f')
+    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weights_bn(), fmt='%f')
+    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weights_bv(), fmt='%f')
 
 elif inp == 'l2':
-    fmins = {}
-    for tau in tau_vals:
-        for e in eta:
-            main_string = str(e)+','+str(tau)
-            try:
-                print 'calling function type ', inp, ' with tau = ', tau, ' and eta = ', e
-                cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=40, eta=e, devset=devtokens, tau=tau, norm='l2')
-                np.savetxt('lintracc25'+inp+str(samples)+'tau'+str(tau)+'eta'+str(e)+'.txt', cl[1], fmt='%f')
-                np.savetxt('linlog25'+inp+str(samples)+'tau'+str(tau)+'eta'+str(e)+'.txt', cl[2], fmt='%f')
-                np.savetxt('lindevacc25'+inp+str(samples)+'tau'+str(tau)+'eta'+str(e)+'.txt', cl[3], fmt='%f')
-                fmins[main_string] = minlog(cl[2])
-            except:
-                print 'problem with eta = ', e, ' tau = ', tau
+    print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
+    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, eta=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l2')
+    np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[3], fmt='%f')
+    np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[2], fmt='%f')
+    np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[1], fmt='%f')
+    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weights_bn(), fmt='%f')
+    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weights_bv(), fmt='%f')
 
-    mstr = sorted(fmins, key=fmins.get)
-    final = mstr
-    print final
-    for i in range(len(final)):
-        try:
-            val = (final[i]).split(',')
-            cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=100, eta=float(val[0]), devset=devtokens, tau=float(val[1]), norm='l2')
-            np.savetxt('devacc'+inp+str(samples)+'tau'+val[1]+'eta'+val[0]+'.txt', cl[3], fmt='%f')
-            np.savetxt('neglogl'+inp+str(samples)+'tau'+val[1]+'eta'+val[0]+'.txt', cl[2], fmt='%f')
-            np.savetxt('tracc'+inp+str(samples)+'tau'+val[1]+'eta'+val[0]+'.txt', cl[1], fmt='%f')
-            np.savetxt('wtln'+inp+str(samples)+'tau'+val[1]+'eta'+val[0]+'.txt', cl[0].weights_n(), fmt='%f')
-            np.savetxt('wtlv'+inp+str(samples)+'tau'+val[1]+'eta'+val[0]+'.txt', cl[0].weights_v(), fmt='%f')
-
-        except:
-            pass
 
 elif inp == 'l1':
     lc = 0.05
