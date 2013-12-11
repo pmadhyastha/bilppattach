@@ -9,8 +9,13 @@ import sys
 
 samples = int(sys.argv[1])
 inp = str(sys.argv[2])
-eta = float(sys.argv[3])
+eta1 = float(sys.argv[3])
 tau = float(sys.argv[4])
+if float(sys.argv[5]):
+    eta2 = float(sys.argv[5])
+    eta = np.random.uniform(300000, 2000000, 10)
+else:
+    eta = [eta1]
 
 traindata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in open('clean/cleantrain.txt')]
 devdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in open('clean/cleandev.txt')]
@@ -47,12 +52,13 @@ def minlog(L):
     return val
 if inp == 'None':
     print 'calling function type ', inp, ' WindowsErrorth tau = ', tau, ' and eta = ', eta
+
     cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, eta=eta, devset=devtoks, devencode=devencode, tau=tau)
     np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[3], fmt='%f')
     np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[2], fmt='%f')
     np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[1], fmt='%f')
-    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weights_bn(), fmt='%f')
-    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weights_bv(), fmt='%f')
+    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weight_bn(), fmt='%f')
+    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weight_bv(), fmt='%f')
 
 elif inp == 'l2':
     print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
@@ -60,69 +66,34 @@ elif inp == 'l2':
     np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[3], fmt='%f')
     np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[2], fmt='%f')
     np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[1], fmt='%f')
-    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weights_bn(), fmt='%f')
-    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weights_bv(), fmt='%f')
-
+    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weight_bn(), fmt='%f')
+    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[0].weight_bv(), fmt='%f')
 
 elif inp == 'l1':
-    lc = 0.05
-    fmins = {}
-    for tau in tau_vals:
-        main_string = str(lc)+','+str(tau)
-        try:
-            print 'calling function type ', inp, ' with tau = ', tau, ' and LC = ', lc
-            cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=40, devset=devtokens, tau=tau, norm='l1', LC=lc)
-            np.savetxt('lintracc25'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+'.txt', cl[1], fmt='%f')
-            np.savetxt('linlog25'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+'.txt', cl[2], fmt='%f')
-            np.savetxt('lindevacc25'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+'.txt', cl[3], fmt='%f')
-            fmins[main_string] = minlog(cl[2])
-        except:
-            print 'problem with LC = ', lc, ' tau = ', tau
+    print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
+    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l1')
+    np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[3], fmt='%f')
+    np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[2], fmt='%f')
+    np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[1], fmt='%f')
+    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[0].weight_bn(), fmt='%f')
+    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[0].weight_bv(), fmt='%f')
 
-    mstr = sorted(fmins, key=fmins.get)
-    final = mstr
-    print final
-    for i in range(len(final)):
-        try:
-            val = (final[i]).split(',')
-            cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=100, LC=float(val[0]), devset=devtokens, tau=float(val[1]), norm='l1')
-            np.savetxt('devacc'+inp+str(samples)+'tau'+val[1]+'lc'+val[0]+'.txt', cl[3], fmt='%f')
-            np.savetxt('neglogl'+inp+str(samples)+'tau'+val[1]+'lc'+val[0]+'.txt', cl[2], fmt='%f')
-            np.savetxt('tracc'+inp+str(samples)+'tau'+val[1]+'lc'+val[0]+'.txt', cl[1], fmt='%f')
-            np.savetxt('wtln'+inp+str(samples)+'tau'+val[1]+'lc'+val[0]+'.txt', cl[0].weights_n(), fmt='%f')
-            np.savetxt('wtlv'+inp+str(samples)+'tau'+val[1]+'lc'+val[0]+'.txt', cl[0].weights_v(), fmt='%f')
+elif inp == 'l2p':
+    print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
+    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l2p')
+    np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[3], fmt='%f')
+    np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[2], fmt='%f')
+    np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[1], fmt='%f')
+    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[0].weight_bn(), fmt='%f')
+    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[0].weight_bv(), fmt='%f')
 
-        except:
-            pass
 
-elif inp == 'l2proximal':
-    lc = 0.05
-    fmins = {}
-    for tau in tau_vals:
-        main_string = str(lc)+','+str(tau)
-        try:
-            print 'calling function type ', inp, ' with tau = ', tau, ' and LC = ', lc
-            cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=40, devset=devtokens, tau=tau, norm='l2proximal', LC=lc)
-            np.savetxt('lintracc25'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+'.txt', cl[1], fmt='%f')
-            np.savetxt('linlog25'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+'.txt', cl[2], fmt='%f')
-            np.savetxt('lindevacc25'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+'.txt', cl[3], fmt='%f')
-            fmins[main_string] = minlog(cl[2])
-        except:
-            print 'problem with LC = ', lc, ' tau = ', tau
-
-    mstr = sorted(fmins, key=fmins.get)
-    final = mstr
-    print final
-    for i in range(len(final)):
-        try:
-            val = (final[i]).split(',')
-            cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=100, LC=float(val[0]), devset=devtokens, tau=float(val[1]), norm='l2proximal')
-            np.savetxt('devacc'+inp+str(samples)+'tau'+val[1]+'lc'+val[0]+'.txt', cl[3], fmt='%f')
-            np.savetxt('neglogl'+inp+str(samples)+'tau'+val[1]+'lc'+val[0]+'.txt', cl[2], fmt='%f')
-            np.savetxt('tracc'+inp+str(samples)+'tau'+val[1]+'lc'+val[0]+'.txt', cl[1], fmt='%f')
-            np.savetxt('wtln'+inp+str(samples)+'tau'+val[1]+'lc'+val[0]+'.txt', cl[0].weights_n(), fmt='%f')
-            np.savetxt('wtlv'+inp+str(samples)+'tau'+val[1]+'lc'+val[0]+'.txt', cl[0].weights_v(), fmt='%f')
-
-        except:
-            pass
+elif inp == 'nn':
+    print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
+    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='nn')
+    np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[3], fmt='%f')
+    np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[2], fmt='%f')
+    np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[1], fmt='%f')
+    np.savetxt('bilwtbn'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[0].weight_bn(), fmt='%f')
+    np.savetxt('bilwtbv'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[0].weight_bv(), fmt='%f')
 
