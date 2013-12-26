@@ -43,13 +43,13 @@ def minlog(L):
     val, idx = min((val, idx) for (idx, val) in enumerate(L))
     return val
 
-#tau_vals_a = [1, 0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.00000001, 0.000000001, 0.0000000001]
-#eta = [1600, 1000, 800, 400, 200, 100, 50, 10]
-#lcvals = [0.5, 0.05, 0.005, 0.0005, 0.00005]
-
-tau_vals_a = [0.0000001]
-eta = [100]
-lcvals = [0.5]
+tau_vals_a = [1, 0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.00000001, 0.000000001, 0.0000000001]
+eta = [1600, 1000, 800, 400, 200, 100, 50, 10]
+lcvals = [0.5, 0.05, 0.005, 0.0005, 0.00005]
+e = 10
+#tau_vals_a = [0.0000001]
+#eta = [100]
+#lcvals = [0.5]
 
 cls = 1
 cb = 1
@@ -59,7 +59,7 @@ if inp == 'None':
         main_string = str(e)+','+str(cls)+','+str(cb)
         try:
             print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and eta = ', e
-            cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=1005, eta=e, devset=devtoks, devencode=devencode)
+            cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=15, eta=e, devset=devtoks, devencode=devencode)
             np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[1], fmt='%f')
             np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[2], fmt='%f')
             np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[3], fmt='%f')
@@ -92,7 +92,7 @@ if inp == 'l2l2':
                 main_string = str(e)+','+str(cls)+','+str(cb)
                 try:
                     print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and eta = ', e
-                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=1005, eta=e, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2', b_penalty='l2')
+                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=15, eta=e, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2', b_penalty='l2')
                     np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[1], fmt='%f')
                     np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[2], fmt='%f')
                     np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'eta'+str(e)+'.txt', cl[3], fmt='%f')
@@ -126,7 +126,7 @@ if inp == 'l2pl2p':
                 main_string = str(lc)+','+str(cls)+','+str(cb)
                 try:
                     print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and lc = ', lc
-                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=1005, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2p', b_penalty='l2p')
+                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=15, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2p', b_penalty='l2p')
                     np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[1], fmt='%f')
                     np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[2], fmt='%f')
                     np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[3], fmt='%f')
@@ -159,7 +159,7 @@ if inp == 'l2pnn':
                 main_string = str(lc)+','+str(cls)+','+str(cb)
                 try:
                     print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and lc = ', lc
-                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=1005, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2p', b_penalty='nn')
+                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=15, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2p', b_penalty='nn')
                     np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[1], fmt='%f')
                     np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[2], fmt='%f')
                     np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[3], fmt='%f')
@@ -192,7 +192,7 @@ if inp == 'l2pl1':
                 main_string = str(lc)+','+str(cls)+','+str(cb)
                 try:
                     print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and lc = ', lc
-                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=1005, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2p', b_penalty='l1')
+                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=15, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l2p', b_penalty='l1')
                     np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[1], fmt='%f')
                     np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[2], fmt='%f')
                     np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[3], fmt='%f')
@@ -226,7 +226,7 @@ if inp == 'l1nn':
                 main_string = str(lc)+','+str(cls)+','+str(cb)
                 try:
                     print 'calling function type ', inp, ' with cb and cls = ', cb, cls, ' and lc = ', lc
-                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=1005, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l1', b_penalty='nn')
+                    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=15, LC_l=lc, LC_b=lc, devset=devtoks, devencode=devencode, tau_l=cls, tau_b=cb, l_penalty='l1', b_penalty='nn')
                     np.savetxt('combotracc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[1], fmt='%f')
                     np.savetxt('comboobj25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[2], fmt='%f')
                     np.savetxt('combodevacc25'+inp+str(samples)+'cls'+str(cls)+'cb'+str(cb)+'lc'+str(lc)+'.txt', cl[3], fmt='%f')

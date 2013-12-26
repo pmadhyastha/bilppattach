@@ -9,13 +9,13 @@ import sys
 
 samples = int(sys.argv[1])
 inp = str(sys.argv[2])
-eta1 = float(sys.argv[3])
+eta = float(sys.argv[3])
 tau = float(sys.argv[4])
-if float(sys.argv[5]):
-    eta2 = float(sys.argv[5])
-    eta = np.random.uniform(300000, 2000000, 10)
-else:
-    eta = [eta1]
+#if float(sys.argv[5]):
+#    eta2 = float(sys.argv[5])
+#    eta = np.random.uniform(float(sys.argv[3]), float(sys.argv[5]), 10)
+#else:
+#    eta = eta1
 
 traindata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in open('clean/cleantrain.txt')]
 devdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in open('clean/cleandev.txt')]
@@ -52,7 +52,6 @@ def minlog(L):
     return val
 if inp == 'None':
     print 'calling function type ', inp, ' WindowsErrorth tau = ', tau, ' and eta = ', eta
-
     cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, eta=eta, devset=devtoks, devencode=devencode, tau=tau)
     np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[3], fmt='%f')
     np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[2], fmt='%f')
@@ -62,7 +61,7 @@ if inp == 'None':
 
 elif inp == 'l2':
     print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
-    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, eta=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l2')
+    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=30, eta=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l2')
     np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[3], fmt='%f')
     np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[2], fmt='%f')
     np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+'.txt', cl[1], fmt='%f')
@@ -71,7 +70,7 @@ elif inp == 'l2':
 
 elif inp == 'l1':
     print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
-    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l1')
+    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=30, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l1')
     np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[3], fmt='%f')
     np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[2], fmt='%f')
     np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[1], fmt='%f')
@@ -80,7 +79,7 @@ elif inp == 'l1':
 
 elif inp == 'l2p':
     print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
-    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l2p')
+    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=30, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l2p')
     np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[3], fmt='%f')
     np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[2], fmt='%f')
     np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[1], fmt='%f')
@@ -90,7 +89,7 @@ elif inp == 'l2p':
 
 elif inp == 'nn':
     print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
-    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=100, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='nn')
+    cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=500, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='nn')
     np.savetxt('bdevacc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[3], fmt='%f')
     np.savetxt('bobjective'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[2], fmt='%f')
     np.savetxt('btracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+'.txt', cl[1], fmt='%f')
