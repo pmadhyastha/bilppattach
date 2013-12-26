@@ -441,6 +441,8 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
     bnS = np.zeros(encoding.shape())
     bvS = np.zeros(encoding.shape())
 
+    bestdevacc = 0
+    bestwts = []
     t1 = time()
     itr = 0
     lam_k = 1
@@ -981,11 +983,15 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
             weight_lvy = weight_lvyp1
 
         classifier.set_weights(weight_bny, weight_bvy, weight_lny, weight_lvy)
+        if bestdevacc < devacc:
+            bestdevacc = devacc
+            bestwts = [weight_bny, weight_bvy, weight_lny, weight_lvy]
+
         lam_k = lam_kp1
         if itr >= max_iter:
             break
 
 #    except:
 #        raise ValueError('try, raise, except error')
-    return classifier, trac, trll, devac
+    return classifier, trac, trll, devac, bestdevacc, bestwts
 
