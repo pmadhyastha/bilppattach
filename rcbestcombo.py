@@ -7,24 +7,24 @@ import combo_me as co
 import bilinear_me as bilme
 import sys
 
-samples = int(sys.argv[1])
-ppt = str(sys.argv[2])
-filbn = str(sys.argv[3])
-filbv = str(sys.argv[4])
-filln = str(sys.argv[5])
-fillv = str(sys.argv[6])
-print 'pptype = ', ppt
+#samples = int(sys.argv[1])
+#ppt = str(sys.argv[2])
+#filbn = str(sys.argv[3])
+#filbv = str(sys.argv[4])
+#filln = str(sys.argv[5])
+#fillv = str(sys.argv[6])
+#print 'pptype = ', ppt
 
 #if float(sys.argv[5]):
 #    eta2 = float(sys.argv[5])
 #    eta = np.random.uniform(float(sys.argv[3]), float(sys.argv[5]), 10)
 #else:
 #    eta = eta1
-filbn = np.matrix(sio.mmread(filbn))
-filbv = np.matrix(sio.mmread(filbv))
-filln = np.array(np.loadtxt(filln, dtype=float))
-fillv = np.array(np.loadtxt(fillv, dtype=float))
-
+#filbn = np.matrix(sio.mmread(filbn))
+#filbv = np.matrix(sio.mmread(filbv))
+#filln = np.array(np.loadtxt(filln, dtype=float))
+#fillv = np.array(np.loadtxt(fillv, dtype=float))
+#
 
 
 def getdicts(data):
@@ -107,9 +107,9 @@ def accuracy(encoding_l, encoding_b, gold, filbn, filbv, filln, fillv, rank=None
         elif np.exp(noun) == np.exp(verb):
             equal += 1
 
-    print 'number of equal scores = ', equal
-
+#    print 'number of equal scores = ', equal
     return float(np.sum(score)) / total, zip(equal_eg, bilaction)
+
 
 
 
@@ -128,17 +128,17 @@ def getdata(samples, ppt):
 
     encoding = co.ComboMaxentFeatEncoding.train(traindata, phih, phim, maph, mapm, pptype=ppt)
     traintoks = encoding.train_toks()
-    print "total training examples for the pptype - ppt ", len(traintoks)
+#    print "total training examples for the pptype - ppt ", len(traintoks)
     devencode = co.ComboMaxentFeatEncoding.train(devdata, phidh, phidm, mapdh, mapdm, pptype=ppt)
     devtoks = devencode.train_toks()
-    print "total development examples for the pptype - ppt ", len(devtoks)
+#    print "total development examples for the pptype - ppt ", len(devtoks)
 
     return encoding, traintoks, devencode, devtoks
 
-encoding, traintoks, devencode, devtoks = getdata(samples, ppt)
+#encoding, traintoks, devencode, devtoks = getdata(samples, ppt)
 
-acc, zpfle = accuracy(encoding_l=encoding, encoding_b=devencode, gold=devtoks, filbn=filbn, filbv=filbv, filln=filln, fillv=fillv)
-print acc
+#acc, zpfle = accuracy(encoding_l=encoding, encoding_b=devencode, gold=devtoks, filbn=filbn, filbv=filbv, filln=filln, fillv=fillv)
+#print acc
 
 def extractoov(traintoks, devtoks, encoding, filbn, filbv, filln, fillv, ppt):
     phidh = sio.mmread('clean/devh1k.mtx')
@@ -196,6 +196,7 @@ def extractoov(traintoks, devtoks, encoding, filbn, filbv, filln, fillv, ppt):
 
     dtlist = [nlist, mlist, vlist, nmlist, vmlist, nvmlist]
     vocablist = ['nlist', 'mlist', 'vlist', 'nmlist', 'vmlist', 'nvmlist']
+    retdict = {}
     m = 0
 
     for lset in dtlist:
@@ -203,8 +204,11 @@ def extractoov(traintoks, devtoks, encoding, filbn, filbv, filln, fillv, ppt):
         devtoks = devencode.train_toks()
 
         oacc, zpfle = accuracy(encoding_l=encoding, encoding_b=devencode, gold=devtoks, filbn=filbn, filbv=filbv, filln=filln, fillv=fillv)
-        print 'accuracy score for ', vocablist[m], oacc
+#        print 'accuracy score for ', vocablist[m], oacc
+        retdict[vocablist[m]] = oacc 
         m += 1
 
-extractoov(traintoks, devtoks, encoding, filbn, filbv, filln, fillv, ppt)
+    return retdict
+
+#extractoov(traintoks, devtoks, encoding, filbn, filbv, filln, fillv, ppt)
 
