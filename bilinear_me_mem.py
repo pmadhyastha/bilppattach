@@ -218,12 +218,15 @@ class BilinearMaxentFeatEncoding(object):
             score_vm = v.T*m
             score_nm = n.T*m
 
- #           if vm not in fcount_bil:
-                fcount_bil[vm] = score_vm
+#            if vm not in fcount_bil:
+#                fcount_bil[vm] = score_vm
+
             if label == 'v':
                 emp_vfcount += score_vm
+
  #           if nm not in fcount_bil:
  #               fcount_bil[nm] = score_nm
+
             if label == 'n':
                 emp_nfcount += score_nm
 
