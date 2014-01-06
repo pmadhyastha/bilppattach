@@ -155,8 +155,10 @@ class BilinearMaxent(object):
                 if probV > probN:
                     correct += 1
 
-            est_bn += np.dot(probN, bil_inn[tok[1]+'_'+tok[3]])
-            est_bv += np.dot(probV, bil_inn[tok[0]+'_'+tok[3]])
+#            est_bn += np.dot(probN, bil_inn[tok[1]+'_'+tok[3]])
+            est_bn += np.dot(probN, n.T*m)
+#            est_bv += np.dot(probV, bil_inn[tok[0]+'_'+tok[3]])
+            est_bv += np.dot(probV, v.T*m)
 
         ####Computing for negative log likelihood minimization!!! #####
 
@@ -211,17 +213,17 @@ class BilinearMaxentFeatEncoding(object):
 
         for tok, label in self._train_toks:
             v, n, m = self.bil_encode([(tok, label)])
-            vm = tok[0]+'_'+tok[3]
-            nm = tok[1]+'_'+tok[3]
+#            vm = tok[0]+'_'+tok[3]
+#            nm = tok[1]+'_'+tok[3]
             score_vm = v.T*m
             score_nm = n.T*m
 
-            if vm not in fcount_bil:
+ #           if vm not in fcount_bil:
                 fcount_bil[vm] = score_vm
             if label == 'v':
                 emp_vfcount += score_vm
-            if nm not in fcount_bil:
-                fcount_bil[nm] = score_nm
+ #           if nm not in fcount_bil:
+ #               fcount_bil[nm] = score_nm
             if label == 'n':
                 emp_nfcount += score_nm
 
@@ -490,7 +492,6 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
             bestdevacc = devacc
             bestwts = [weight_bny, weight_bvy]
 
-
         lam_k = lam_kp1
         if itr >= max_iter:
             break
@@ -498,4 +499,5 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
 #    except:
 #        raise ValueError('try, raise, except error')
     return classifier, trac, trll, devac, bestdevacc, bestwts
+
 

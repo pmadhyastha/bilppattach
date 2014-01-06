@@ -63,6 +63,10 @@ if inp == 'None':
     np.savetxt('bil-models/btracc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[1], fmt='%f')
     np.savetxt('bil-models/bilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[0].weight_bn(), fmt='%f')
     np.savetxt('bil-models/bilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[0].weight_bv(), fmt='%f')
+    print '------------- BEST DEVACC SCORE ================== ========== ', cl[4], ' -------------'
+    print '-------------Bilinear norm sum = ====================', np.sum(cl[5][0]), np.sum(cl[5][1])
+    np.savetxt('bil-models/bestbilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][0], fmt='%f')
+    np.savetxt('bil-models/bestbilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][1], fmt='%f')
 
 elif inp == 'l2':
     print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
@@ -72,7 +76,10 @@ elif inp == 'l2':
     np.savetxt('bil-models/btracc'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[1], fmt='%f')
     np.savetxt('bil-models/bilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[0].weight_bn(), fmt='%f')
     np.savetxt('bil-models/bilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[0].weight_bv(), fmt='%f')
-
+    print '------------- BEST DEVACC SCORE ================== ========== ', cl[4], ' -------------'
+    print '-------------Bilinear norm sum = ====================', np.sum(cl[5][0]), np.sum(cl[5][1])
+    np.savetxt('bil-models/bestbilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][0], fmt='%f')
+    np.savetxt('bil-models/bestbilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][1], fmt='%f')
 elif inp == 'l1':
     print 'calling function type ', inp, ' and tau = ', tau, ' and LC = ', eta
     cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=numbers, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l1')
@@ -81,6 +88,10 @@ elif inp == 'l1':
     np.savetxt('bil-models/btracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[1], fmt='%f')
     np.savetxt('bil-models/bilwtbn'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[0].weight_bn(), fmt='%f')
     np.savetxt('bil-models/bilwtbv'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[0].weight_bv(), fmt='%f')
+    print '------------- BEST DEVACC SCORE ================== ========== ', cl[4], ' -------------'
+    print '-------------Bilinear norm sum = ====================', np.sum(cl[5][0]), np.sum(cl[5][1])
+    np.savetxt('bil-models/bestbilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][0], fmt='%f')
+    np.savetxt('bil-models/bestbilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][1], fmt='%f')
 
 elif inp == 'l2p':
     print 'calling function type ', inp, ' and tau = ', tau, ' and LC = ', eta
@@ -90,6 +101,10 @@ elif inp == 'l2p':
     np.savetxt('bil-models/btracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[1], fmt='%f')
     np.savetxt('bil-models/bilwtbn'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[0].weight_bn(), fmt='%f')
     np.savetxt('bil-models/bilwtbv'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[0].weight_bv(), fmt='%f')
+    print '------------- BEST DEVACC SCORE ================== ========== ', cl[4], ' -------------'
+    print '-------------Bilinear norm sum = ====================', np.sum(cl[5][0]), np.sum(cl[5][1])
+    np.savetxt('bil-models/bestbilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][0], fmt='%f')
+    np.savetxt('bil-models/bestbilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][1], fmt='%f')
 
 
 elif inp == 'nn':
@@ -100,4 +115,8 @@ elif inp == 'nn':
     np.savetxt('bil-models/btracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[1], fmt='%f')
     np.savetxt('bil-models/bilwtbn'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[0].weight_bn(), fmt='%f')
     np.savetxt('bil-models/bilwtbv'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[0].weight_bv(), fmt='%f')
+    print '------------- BEST DEVACC SCORE ================== ========== ', cl[4], ' -------------'
+    print '-------------Bilinear norm sum = ====================', np.sum(cl[5][0]), np.sum(cl[5][1])
+    np.savetxt('bil-models/bestbilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][0], fmt='%f')
+    np.savetxt('bil-models/bestbilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][1], fmt='%f')
 
