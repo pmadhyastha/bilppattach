@@ -349,6 +349,7 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
             bn_norm = np.linalg.norm(weight_bny, ord=1)
             bv_norm = np.linalg.norm(weight_bvy, ord=1)
 
+            sum_norm = (tau * bn_norm) + (tau * bv_norm)
             objective = ll + sum_norm
 
             t2 = time()
