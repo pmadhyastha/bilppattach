@@ -2,7 +2,8 @@
 
 import scipy.io as sio
 import numpy as np
-import combo_me as co
+#import combo_me as co
+import fix_combo_me as co
 #import maxent_new as maxent
 import bilinear_me as bilme
 import sys
