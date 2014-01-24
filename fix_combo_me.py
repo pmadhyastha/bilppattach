@@ -236,11 +236,12 @@ class ComboMaxent(object):
 
 class ComboMaxentFeatEncoding(object):
 
-    def __init__(self, train_toks, phi_h, phi_m, map_h, map_m, labels, mapping_n, mapping_v, featuresets, pptype, emps=None, fix=1):
+    def __init__(self, train_toks, phi_h, phi_m, map_h, map_m, labels, mapping_n, mapping_v, featuresets, pptype, fix=1, emps=None,):
 
         self._train_toks = data_extract(train_toks, pptype)
         self._phi_h = np.matrix(phi_h.todense())
         self._phi_m = np.matrix(phi_m.todense())
+        self._fix = fix
         self._map_h = list(map_h)
         self._map_m = list(map_m)
         self._labels = list(labels)
@@ -252,7 +253,7 @@ class ComboMaxentFeatEncoding(object):
         self._labels = labels
         self._featuresets = featuresets
         self._emps = emps
-
+        print ('emps', emps)
     def mapping_n(self):
         return self._mapping_n
 
@@ -270,7 +271,7 @@ class ComboMaxentFeatEncoding(object):
             self.compute_emps()
         return self._emps
 
-    def compute_emps(self, fix=1):
+    def compute_emps(self):
         trn = self._train_toks
         V, N, M = self.bil_encode(trn)
         emp_nfcount = np.matrix(np.zeros(self._shape))
@@ -290,14 +291,19 @@ class ComboMaxentFeatEncoding(object):
             if label == 'v':
                 for (index, val) in self.lin_encode(tok, label):
                     fcount_v[index] += val
-                if fix == 1:
+                if self._fix == 1 or self._fix == 2:
                     fix_lv.append(np.linalg.norm(fcount_v))
+                if self._fix == 3:
+                    fix_lv.append(1)
+
 
             if label == 'n':
                 for (index, val) in self.lin_encode(tok, label):
                     fcount_n[index] += val
-                if fix == 1:
+                if self._fix == 1 or self._fix == 2:
                     fix_ln.append(np.linalg.norm(fcount_n))
+                if self._fix == 3:
+                    fix_ln.append(1)
 
         fcount_bil = {}
 
@@ -312,16 +318,20 @@ class ComboMaxentFeatEncoding(object):
 
             if label == 'v':
                 emp_vfcount += vm_feat
-                if fix == 1:
+                if self._fix == 1 or self._fix == 3:
                     fix_bv.append(np.linalg.norm(emp_vfcount))
+                if self._fix == 2:
+                    fix_bv.append(1)
 
             if vm not in fcount_bil:
                 fcount_bil[vm] = vm_feat
 
             if label == 'n':
                 emp_nfcount += nm_feat
-                if fix == 1:
+                if self._fix == 1 or self._fix == 3:
                     fix_bn.append(np.linalg.norm(emp_nfcount))
+                if self._fix == 2:
+                    fix_bn.append(1)
 
             if nm not in fcount_bil:
                 fcount_bil[nm] = nm_feat
@@ -381,7 +391,7 @@ class ComboMaxentFeatEncoding(object):
         return self._shape
 
     @classmethod
-    def train(cls, train_toks, phi_h, phi_m, map_h, map_m, pptype, labels=None, cols=1000):
+    def train(cls, train_toks, phi_h, phi_m, map_h, map_m, pptype, labels=None, cols=1000, fix=1):
         mapping_n = {}
         mapping_v = {}
         seen_labels = set()
@@ -418,7 +428,7 @@ class ComboMaxentFeatEncoding(object):
 
         if labels is None:
             labels = seen_labels
-        return cls(train_toks, phi_h, phi_m, map_h, map_m, labels, mapping_n, mapping_v, featuresets, pptype)
+        return cls(train_toks, phi_h, phi_m, map_h, map_m, labels, mapping_n, mapping_v, featuresets, pptype, fix)
 
 
 def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_iter, tau_l, tau_b, LC_l, LC_b, l_penalty, b_penalty, pptype, devencode, devset, eta):
