@@ -1008,6 +1008,7 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
             weight_lvy = weight_lvyp1
 
         classifier.set_weights(weight_bny, weight_bvy, weight_lny, weight_lvy)
+
         if bestdevacc < devacc:
             bestdevacc = devacc
             bestwts = [weight_bny, weight_bvy, weight_lny, weight_lvy]
