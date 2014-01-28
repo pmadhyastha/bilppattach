@@ -15,8 +15,10 @@ tau_l = float(sys.argv[4])
 tau_b = float(sys.argv[5])
 numbers = int(sys.argv[6])
 ppt = str(sys.argv[7])
+fx = int(sys.argv[8])
 #ppt=None
 print 'pptype = ', ppt
+print 'fix type = ', fx
 #if float(sys.argv[5]):
 #    eta2 = float(sys.argv[5])
 #    eta = np.random.uniform(float(sys.argv[3]), float(sys.argv[5]), 10)
@@ -37,13 +39,13 @@ mapdh = np.loadtxt('clean/devheads.txt', dtype=str)
 mapdm = np.loadtxt('clean/devmods.txt', dtype=str)
 
 
-encoding = co.ComboMaxentFeatEncoding.train(traindata, phih, phim, maph, mapm, pptype=ppt)
+encoding = co.ComboMaxentFeatEncoding.train(traindata, phih, phim, maph, mapm, pptype=ppt, fix=fx)
 traintoks = encoding.train_toks()
 traintokens = [(co.word_features(t),l) for t,l in encoding.train_toks()]
 print 'type = ', inp, 'total samples = ', samples
 print "total training examples for the pptype - None ", len(traintoks)
 
-devencode = co.ComboMaxentFeatEncoding.train(devdata, phidh, phidm, mapdh, mapdm, pptype=ppt)
+devencode = co.ComboMaxentFeatEncoding.train(devdata, phidh, phidm, mapdh, mapdm, pptype=ppt, fix=fx)
 devtoks = devencode.train_toks()
 devtokens = [(co.word_features(t),l) for t,l in devencode.train_toks()]
 print "total development examples for the pptype - None ", len(devtoks)
