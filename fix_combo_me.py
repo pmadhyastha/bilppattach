@@ -1,4 +1,4 @@
-#!/usr/bin/python
+
 
 from __future__ import print_function, unicode_literals, division
 #import sklearn.preprocessing as skp
@@ -1007,11 +1007,13 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
             weight_bvy = weight_bvyp1
             weight_lvy = weight_lvyp1
 
+        prev_wts = [classifier.weight_bv(), classifier.weight_bn(), classifier.weight_lv(), classifier.weight_ln()]
         classifier.set_weights(weight_bny, weight_bvy, weight_lny, weight_lvy)
 
         if bestdevacc < devacc:
             bestdevacc = devacc
-            bestwts = [weight_bny, weight_bvy, weight_lny, weight_lvy]
+#            bestwts = [weight_bny, weight_bvy, weight_lny, weight_lvy]
+            bestwts = prev_wts
 
         lam_k = lam_kp1
         if itr >= max_iter:
