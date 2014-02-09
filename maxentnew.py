@@ -143,6 +143,9 @@ class Maxent(object):
     def bin_classify(self, headmat, modmat, weightmat):
         return 'NotImplemented'
 
+    def ext_encoding(self):
+        return self._encoding
+
     @classmethod
     def train(cls, train_toks, algorithm=None, encoding=None, labels=None,
               max_iter=10, LC=100, tau=1.0, norm=None, devset=None, eta=1):
