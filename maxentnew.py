@@ -143,9 +143,6 @@ class Maxent(object):
     def bin_classify(self, headmat, modmat, weightmat):
         return 'NotImplemented'
 
-    def ext_encoding(self):
-        return self._encoding
-
     @classmethod
     def train(cls, train_toks, algorithm=None, encoding=None, labels=None,
               max_iter=10, LC=100, tau=1.0, norm=None, devset=None, eta=1):
@@ -233,7 +230,8 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
     encoding = BinaryMaxentFeatureEncoding.train(train_toks, labels=labels)
 
     emp_n, emp_v = calculate_empirical_fcount(train_toks, encoding)
-
+    dprev = 0
+    bestwts = []
     weights_n = np.zeros(len(emp_n), 'd')
     weights_v = np.zeros(len(emp_v), 'd')
 
@@ -381,11 +379,15 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 trl.append(ll)
                 dr.append(dacc)
                 ob.append(obj)
-
+            prev_wts = [classifier.weights_n(), classifier.weights_v()]
             classifier.set_weights(weights_n, weights_v)
+            if dprev < dacc: 
+                dprev = dacc
+                bestwts = prev_wts
+
             if itr >= max_iter:
                 break
     except:
         raise
 
-    return classifier, tr, ob, dr,
+    return classifier, tr, ob, dr, bestwts, dprev 
