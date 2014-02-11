@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 import numpy as np
+import  sys, traceback
 from collections import defaultdict
 
 
@@ -245,6 +246,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
 
     print ('------Training (%d iterations----------)' % max_iter)
     print ('----------------------------------------------------------')
+    norm_list = []
     tr = []
     trl = []
     dr = []
@@ -287,6 +289,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 print ('%9d   %14.5f   %14.5f  %9.3f  %9.3f'
                        % (itr, ll, normsum_l2p, acc, dacc))
                 tr.append(acc)
+                norm_list.append(normsum_l2p)
                 trl.append(ll)
                 dr.append(dacc)
                 ob.append(ll)
@@ -329,6 +332,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 print ('%9d   %14.5f %14.5f  %14.5f    %9.3f, %9.3f'
                        % (itr, ll, obj, normsum_l1, acc, dacc))
                 tr.append(acc)
+                norm_list.append(normsum_l1)
                 trl.append(ll)
                 dr.append(dacc)
                 ob.append(obj)
@@ -359,6 +363,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                 print ('%9d   %14.5f %14.5f  %14.5f    %9.3f, %9.3f'
                        % (itr, ll, obj, normsum_l2p, acc, dacc))
                 tr.append(acc)
+                norm_list.append(normsum_l2p)
                 trl.append(ll)
                 dr.append(dacc)
                 ob.append(obj)
@@ -376,18 +381,20 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels,
                        % (itr, ll, obj, normsum_l2, acc, dacc))
 
                 tr.append(acc)
+                norm_list.append(normsum_l2)
                 trl.append(ll)
                 dr.append(dacc)
                 ob.append(obj)
             prev_wts = [classifier.weights_n(), classifier.weights_v()]
             classifier.set_weights(weights_n, weights_v)
-            if dprev < dacc: 
+            if dprev < dacc:
                 dprev = dacc
                 bestwts = prev_wts
 
             if itr >= max_iter:
                 break
     except:
-        raise
+#        raise
+        traceback.print_exc()
 
-    return classifier, tr, ob, dr, bestwts, dprev 
+    return classifier, tr, ob, dr, bestwts, dprev , norm_list

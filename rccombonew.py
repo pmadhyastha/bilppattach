@@ -78,6 +78,10 @@ if inp == 'None':
     sio.mmwrite('combo-models/bestwtbv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.mtx', ((cl[5])[1]))
     np.savetxt('combo-models/bestwtln'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[2]), fmt='%f')
     np.savetxt('combo-models/bestwtlv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[3]), fmt='%f')
+    np.savetxt('combo-models/combonorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[6], fmt='%f')
+    np.savetxt('combo-models/linnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[7], fmt='%f')
+    np.savetxt('combo-models/bilnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[8], fmt='%f')
+
 
 if inp == 'l2pl2p':
     print 'calling function type ', inp, ' With tau_l and tau_b = ', tau_l, tau_b, ' and lc = ', eta
@@ -97,6 +101,10 @@ if inp == 'l2pl2p':
     sio.mmwrite('combo-models/bestwtbv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.mtx', ((cl[5])[1]))
     np.savetxt('combo-models/bestwtln'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[2]), fmt='%f')
     np.savetxt('combo-models/bestwtlv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[3]), fmt='%f')
+    np.savetxt('combo-models/combonorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[6], fmt='%f')
+    np.savetxt('combo-models/linnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[7], fmt='%f')
+    np.savetxt('combo-models/bilnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[8], fmt='%f')
+
 
 
 if inp == 'l2pl1':
@@ -117,6 +125,10 @@ if inp == 'l2pl1':
     sio.mmwrite('combo-models/bestwtbv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.mtx', ((cl[5])[1]))
     np.savetxt('combo-models/bestwtln'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[2]), fmt='%f')
     np.savetxt('combo-models/bestwtlv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[3]), fmt='%f')
+    np.savetxt('combo-models/combonorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[6], fmt='%f')
+    np.savetxt('combo-models/linnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[7], fmt='%f')
+    np.savetxt('combo-models/bilnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[8], fmt='%f')
+
 
 
 
@@ -138,6 +150,10 @@ if inp == 'l2pnn':
     sio.mmwrite('combo-models/bestwtbv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.mtx', ((cl[5])[1]))
     np.savetxt('combo-models/bestwtln'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[2]), fmt='%f')
     np.savetxt('combo-models/bestwtlv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[3]), fmt='%f')
+    np.savetxt('combo-models/combonorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[6], fmt='%f')
+    np.savetxt('combo-models/linnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[7], fmt='%f')
+    np.savetxt('combo-models/bilnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[8], fmt='%f')
+
 
 
 
@@ -158,6 +174,10 @@ if inp == 'l1nn':
     sio.mmwrite('combo-models/bestwtbv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.mtx', ((cl[5])[1]))
     np.savetxt('combo-models/bestwtln'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[2]), fmt='%f')
     np.savetxt('combo-models/bestwtlv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[3]), fmt='%f')
+    np.savetxt('combo-models/combonorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[6], fmt='%f')
+    np.savetxt('combo-models/linnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[7], fmt='%f')
+    np.savetxt('combo-models/bilnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[8], fmt='%f')
+
 
 
 if inp == 'l1l1':
@@ -177,6 +197,10 @@ if inp == 'l1l1':
     sio.mmwrite('combo-models/bestwtbv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.mtx', ((cl[5])[1]))
     np.savetxt('combo-models/bestwtln'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[2]), fmt='%f')
     np.savetxt('combo-models/bestwtlv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[3]), fmt='%f')
+    np.savetxt('combo-models/combonorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[6], fmt='%f')
+    np.savetxt('combo-models/linnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[7], fmt='%f')
+    np.savetxt('combo-models/bilnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[8], fmt='%f')
+
 
 
 
@@ -198,5 +222,9 @@ if inp == 'l1l2p':
     sio.mmwrite('combo-models/bestwtbv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.mtx', ((cl[5])[1]))
     np.savetxt('combo-models/bestwtln'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[2]), fmt='%f')
     np.savetxt('combo-models/bestwtlv'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', ((cl[5])[3]), fmt='%f')
+    np.savetxt('combo-models/combonorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[6], fmt='%f')
+    np.savetxt('combo-models/linnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[7], fmt='%f')
+    np.savetxt('combo-models/bilnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[8], fmt='%f')
+
 
 
