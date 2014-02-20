@@ -3,7 +3,8 @@
 import scipy.io as sio
 import numpy as np
 #import combo_me as co
-import fix_combo_me as co
+#import fix_combo_me as co
+import combome_fobos as co
 #import maxent_new as maxent
 import bilinear_me as bilme
 import sys
@@ -204,10 +205,10 @@ if inp == 'l1l1':
 
 
 
-if inp == 'l1l2p':
+if inp == 'l2fnnf':
     print 'calling function type ', inp, ' With tau_l and tau_b = ', tau_l, tau_b, ' and lc = ', eta
 
-    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=numbers, devset=devtoks, devencode=devencode, tau_l=tau_l, tau_b=tau_b, l_penalty='l1', b_penalty='l2p', LC_l=eta, LC_b=eta)
+    cl = co.ComboMaxent.combo_train(traintoks, encoding, max_iter=numbers, devset=devtoks, devencode=devencode, tau_l=tau_l, tau_b=tau_b, l_penalty='l2f', b_penalty='nnf', LC_l=eta, LC_b=eta)
     np.savetxt('combo-models/comlog'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'lc'+str(eta)+ppt+'.txt', cl[2], fmt='%f')
     np.savetxt('combo-models/comtracc'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'lc'+str(eta)+ppt+'.txt', cl[1], fmt='%f')
     np.savetxt('combo-models/comdevacc'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'lc'+str(eta)+ppt+'.txt', cl[3], fmt='%f')
@@ -225,6 +226,7 @@ if inp == 'l1l2p':
     np.savetxt('combo-models/combonorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[6], fmt='%f')
     np.savetxt('combo-models/linnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[7], fmt='%f')
     np.savetxt('combo-models/bilnorm'+inp+str(samples)+'cl'+str(tau_l)+'cb'+str(tau_b)+'eta'+str(eta)+ppt+'.txt', cl[8], fmt='%f')
+
 
 
 

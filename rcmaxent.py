@@ -2,9 +2,8 @@
 
 import scipy.io as sio
 import numpy as np
-import combo_me as co
-#import maxent_new as maxent
-import maxentnew as maxent
+import fix_combo_me as co
+import maxentfobos as maxent
 import sys
 
 samples = int(sys.argv[1])
@@ -50,7 +49,7 @@ def minlog(L):
     return val
 if inp == 'None':
     print 'calling function type ', inp, ' with tau = ', tau, ' and lc = ', lc
-    cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=100, eta=lc, devset=devtokens, tau=tau)
+    cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=numbers, eta=lc, devset=devtokens, tau=tau)
     np.savetxt('lin-models/devacc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[3], fmt='%f')
     np.savetxt('lin-models/lobjective'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[2], fmt='%f')
     np.savetxt('lin-models/tracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[1], fmt='%f')
@@ -63,7 +62,7 @@ if inp == 'None':
 
 elif inp == 'l1':
     print 'calling function type ', inp, ' with tau = ', tau, ' and LC = ', lc
-    cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=100, devset=devtokens, tau=tau, norm='l1', LC=lc)
+    cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=numbers, devset=devtokens, tau=tau, norm='l1', LC=lc)
     np.savetxt('lin-models/devacc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[3], fmt='%f')
     np.savetxt('lin-models/lobjective'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[2], fmt='%f')
     np.savetxt('lin-models/tracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[1], fmt='%f')
@@ -76,13 +75,26 @@ elif inp == 'l1':
 
 elif inp == 'l2proximal':
     print 'calling function type ', inp, ' with tau = ', tau, ' and LC = ', lc
-    cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=100, devset=devtokens, tau=tau, norm='l2proximal', LC=lc)
+    cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=numbers, devset=devtokens, tau=tau, norm='l2proximal', LC=lc)
     np.savetxt('lin-models/devacc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[3], fmt='%f')
     np.savetxt('lin-models/lobjective'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[2], fmt='%f')
     np.savetxt('lin-models/tracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[1], fmt='%f')
     np.savetxt('lin-models/wtln'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[0].weights_n(), fmt='%f')
     np.savetxt('lin-models/wtlv'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[0].weights_v(), fmt='%f')
 
+    print '------------- BEST DEVACC SCORE ================== ========== ', cl[5], ' -------------'
+    np.savetxt('lin-models/bestlinwtln'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[4][0], fmt='%f')
+    np.savetxt('lin-models/bestlinwtlv'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[4][1], fmt='%f')
+    np.savetxt('lin-models/norms'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[6], fmt='%f')
+
+elif inp == 'l2f':
+    print 'calling function type ', inp, ' with tau = ', tau, ' and LC = ', lc
+    cl = maxent.Maxent.train(train_toks=traintokens, algorithm='gd', max_iter=numbers, devset=devtokens, tau=tau, norm='l2f', LC=lc)
+    np.savetxt('lin-models/devacc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[3], fmt='%f')
+    np.savetxt('lin-models/lobjective'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[2], fmt='%f')
+    np.savetxt('lin-models/tracc'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[1], fmt='%f')
+    np.savetxt('lin-models/wtln'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[0].weights_n(), fmt='%f')
+    np.savetxt('lin-models/wtlv'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[0].weights_v(), fmt='%f')
     print '------------- BEST DEVACC SCORE ================== ========== ', cl[5], ' -------------'
     np.savetxt('lin-models/bestlinwtln'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[4][0], fmt='%f')
     np.savetxt('lin-models/bestlinwtlv'+inp+str(samples)+'tau'+str(tau)+'lc'+str(lc)+str(ppt)+'.txt', cl[4][1], fmt='%f')
