@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function, unicode_literals, division
+import traceback
 #import sklearn.preprocessing as skp
 import numpy as np
 from time import time
@@ -281,6 +282,7 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
     trac = []
     trll = []
     devac = []
+    normlist = []
 
     if encoding == None:
         raise ValueError('Build an embedding and pass!!')
@@ -308,195 +310,201 @@ def train_bilinear_maxent_classifier_with_gd(train_toks, encoding, algorithm, ma
     t1 = time()
     itr = 0
     lam_k = 1
-    while True:
-        itr += 1
-        lam_kp1 = float(1 + np.sqrt(1 + 4*(lam_k**2 ))) / 2
-        grad_bn, grad_bv, ll, acc = classifier.gradients()
+    try:
+        while True:
+            itr += 1
+            lam_kp1 = float(1 + np.sqrt(1 + 4*(lam_k**2 ))) / 2
+            grad_bn, grad_bv, ll, acc = classifier.gradients()
 
-#        print (grad_ln, grad_lv)
+    #        print (grad_ln, grad_lv)
 
-        if devencode and devset:
-            devacc = accuracy(devencode, classifier, devset)
-        else:
-            devacc = 0
+            if devencode and devset:
+                devacc = accuracy(devencode, classifier, devset)
+            else:
+                devacc = 0
 
-        weight_bny = classifier.weight_bn()
-        weight_bvy = classifier.weight_bv()
+            weight_bny = classifier.weight_bn()
+            weight_bvy = classifier.weight_bv()
 
-        if penalty==None:
+            if penalty==None:
 
-            bn_norm = np.linalg.norm(weight_bny, ord=2)
-            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+                bn_norm = np.linalg.norm(weight_bny, ord=2)
+                bv_norm = np.linalg.norm(weight_bvy, ord=2)
 
-            sum_norm = (tau * bn_norm) + (tau * bv_norm)
+                sum_norm = (tau * bn_norm) + (tau * bv_norm)
+                normlist.append(sum_norm)
+                objective = ll #+ sum_norm
 
-            objective = ll #+ sum_norm
+                t2 = time()
 
-            t2 = time()
+                print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                    %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
 
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
+                t1 = time()
+                weight_bny -= np.dot(eta, (np.dot(tau, grad_bn) / np.sqrt(itr)))
+                weight_bvy -= np.dot(eta, (np.dot(tau, grad_bv) / np.sqrt(itr)))
+                trac.append(acc)
+                trll.append(objective)
+                devac.append(devacc)
 
-            t1 = time()
-            weight_bny -= np.dot(eta, (np.dot(tau, grad_bn) / np.sqrt(itr)))
-            weight_bvy -= np.dot(eta, (np.dot(tau, grad_bv) / np.sqrt(itr)))
-            trac.append(acc)
-            trll.append(objective)
-            devac.append(devacc)
+            if penalty=='l1':
 
-        if penalty=='l1':
+                bn_norm = np.linalg.norm(weight_bny, ord=1)
+                bv_norm = np.linalg.norm(weight_bvy, ord=1)
 
-            bn_norm = np.linalg.norm(weight_bny, ord=1)
-            bv_norm = np.linalg.norm(weight_bvy, ord=1)
+                sum_norm = (tau * bn_norm) + (tau * bv_norm)
+                objective = ll + sum_norm
 
-            sum_norm = (tau * bn_norm) + (tau * bv_norm)
-            objective = ll + sum_norm
+                normlist.append(sum_norm)
+                t2 = time()
 
-            t2 = time()
+                print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                    %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
 
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
+                t1 = time()
 
-            t1 = time()
+                nu = tau / LC
 
-            nu = tau / LC
+                temp_by_n = weight_bny - grad_bn / LC
+                temp_by_v = weight_bvy - grad_bv / LC
 
-            temp_by_n = weight_bny - grad_bn / LC
-            temp_by_v = weight_bvy - grad_bv / LC
+                weight_bnxp1 = proximal_op(temp_by_n, nu)
+                weight_bvxp1 = proximal_op(temp_by_v, nu)
 
-            weight_bnxp1 = proximal_op(temp_by_n, nu)
-            weight_bvxp1 = proximal_op(temp_by_v, nu)
+                lr = (lam_k - 1) / lam_kp1
 
-            lr = (lam_k - 1) / lam_kp1
+                weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
+                weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
+                trac.append(acc)
+                trll.append(objective)
+                devac.append(devacc)
 
-            weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
-            weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
-            trac.append(acc)
-            trll.append(objective)
-            devac.append(devacc)
+                weight_bnx = weight_bnxp1
+                weight_bny = weight_bnyp1
 
-            weight_bnx = weight_bnxp1
-            weight_bny = weight_bnyp1
+                weight_bvx = weight_bvxp1
+                weight_bvy = weight_bvyp1
 
-            weight_bvx = weight_bvxp1
-            weight_bvy = weight_bvyp1
 
+            if penalty=='nn':
 
-        if penalty=='nn':
+                bn_norm = np.sum(bnS)
+                bv_norm = np.sum(bvS)
 
-            bn_norm = np.sum(bnS)
-            bv_norm = np.sum(bvS)
+                sum_norm = (tau * bn_norm) + (tau * bv_norm)
 
-            sum_norm = (tau * bn_norm) + (tau * bv_norm)
+                normlist.append(sum_norm)
+                objective = ll + sum_norm
 
-            objective = ll + sum_norm
+                t2 = time()
 
-            t2 = time()
+                print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                    %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
 
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
+                t1 = time()
 
-            t1 = time()
+                nu = tau / LC
 
-            nu = tau / LC
+                temp_by_n = weight_bny - grad_bn / LC
+                temp_by_v = weight_bvy - grad_bv / LC
 
-            temp_by_n = weight_bny - grad_bn / LC
-            temp_by_v = weight_bvy - grad_bv / LC
+                bnU, bnS, bnVt = np.linalg.svd(temp_by_n)
+                bvU, bvS, bvVt = np.linalg.svd(temp_by_v)
 
-            bnU, bnS, bnVt = np.linalg.svd(temp_by_n)
-            bvU, bvS, bvVt = np.linalg.svd(temp_by_v)
+                bnS = np.maximum(bnS - nu, 0)
+                bvS = np.maximum(bvS - nu, 0)
 
-            bnS = np.maximum(bnS - nu, 0)
-            bvS = np.maximum(bvS - nu, 0)
+                weight_bnxp1 = np.dot(bnU, np.dot(np.diag(bnS), bnVt))
+                weight_bvxp1 = np.dot(bvU, np.dot(np.diag(bvS), bvVt))
 
-            weight_bnxp1 = np.dot(bnU, np.dot(np.diag(bnS), bnVt))
-            weight_bvxp1 = np.dot(bvU, np.dot(np.diag(bvS), bvVt))
+                lr = (lam_k - 1) / lam_kp1
+                weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
+                weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
 
-            lr = (lam_k - 1) / lam_kp1
-            weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
-            weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
+                weight_bnx = weight_bnxp1
+                weight_bny = weight_bnyp1
 
-            weight_bnx = weight_bnxp1
-            weight_bny = weight_bnyp1
+                weight_bvx = weight_bvxp1
+                weight_bvy = weight_bvyp1
+                trac.append(acc)
+                trll.append(objective)
+                devac.append(devacc)
 
-            weight_bvx = weight_bvxp1
-            weight_bvy = weight_bvyp1
-            trac.append(acc)
-            trll.append(objective)
-            devac.append(devacc)
+            if penalty=='l2':
 
-        if penalty=='l2':
+                bn_norm = np.linalg.norm(weight_bny, ord=2)
+                bv_norm = np.linalg.norm(weight_bvy, ord=2)
 
-            bn_norm = np.linalg.norm(weight_bny, ord=2)
-            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+                sum_norm = (tau * bn_norm) + (tau * bv_norm)
 
-            sum_norm = (tau * bn_norm) + (tau * bv_norm)
+                normlist.append(sum_norm)
+                objective = ll + sum_norm
 
-            objective = ll + sum_norm
+                t2 = time()
 
-            t2 = time()
+                print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                    %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
 
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
+                t1 = time()
 
-            t1 = time()
+                weight_bny -= eta * (grad_bn + np.dot(tau, weight_bny)) / np.sqrt(itr)
+                weight_bvy -= eta * (grad_bv + np.dot(tau, weight_bvy)) / np.sqrt(itr)
+                trac.append(acc)
+                trll.append(objective)
+                devac.append(devacc)
 
-            weight_bny -= eta * (grad_bn + np.dot(tau, weight_bny)) / np.sqrt(itr)
-            weight_bvy -= eta * (grad_bv + np.dot(tau, weight_bvy)) / np.sqrt(itr)
-            trac.append(acc)
-            trll.append(objective)
-            devac.append(devacc)
+            if penalty=='l2p':
 
-        if penalty=='l2p':
+                bn_norm = np.linalg.norm(weight_bny, ord=2)
+                bv_norm = np.linalg.norm(weight_bvy, ord=2)
 
-            bn_norm = np.linalg.norm(weight_bny, ord=2)
-            bv_norm = np.linalg.norm(weight_bvy, ord=2)
+                sum_norm = (tau * bn_norm) + (tau * bv_norm)
 
-            sum_norm = (tau * bn_norm) + (tau * bv_norm)
+                normlist.append(sum_norm)
+                objective = ll + sum_norm
 
-            objective = ll + sum_norm
+                t2 = time()
 
-            t2 = time()
+                print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
+                    %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
 
-            print ('|%9d     |%14.7f    | (%2.3f, %2.3f) |%9.3f  |%9.3f    | %9.3f  |'
-                   %(itr, objective, bn_norm, bv_norm, acc, t2-t1, devacc), )
+                t1 = time()
 
-            t1 = time()
+                nu = tau / LC
 
-            nu = tau / LC
+                temp_by_n = weight_bny - grad_bn / LC
+                temp_by_v = weight_bvy - grad_bv / LC
 
-            temp_by_n = weight_bny - grad_bn / LC
-            temp_by_v = weight_bvy - grad_bv / LC
+                weight_bnxp1 = proximal_l2(temp_by_n, nu)
+                weight_bvxp1 = proximal_l2(temp_by_v, nu)
 
-            weight_bnxp1 = proximal_l2(temp_by_n, nu)
-            weight_bvxp1 = proximal_l2(temp_by_v, nu)
+                lr = (lam_k - 1) / lam_kp1
 
-            lr = (lam_k - 1) / lam_kp1
+                weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
+                weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
+                trac.append(acc)
+                trll.append(objective)
+                devac.append(devacc)
 
-            weight_bnyp1 = weight_bnxp1 + lr * (weight_bnxp1 - weight_bnx)
-            weight_bvyp1 = weight_bvxp1 + lr * (weight_bvxp1 - weight_bvx)
-            trac.append(acc)
-            trll.append(objective)
-            devac.append(devacc)
+                weight_bnx = weight_bnxp1
+                weight_bny = weight_bnyp1
 
-            weight_bnx = weight_bnxp1
-            weight_bny = weight_bnyp1
+                weight_bvx = weight_bvxp1
+                weight_bvy = weight_bvyp1
 
-            weight_bvx = weight_bvxp1
-            weight_bvy = weight_bvyp1
 
+            classifier.set_weights(weight_bny, weight_bvy)
+            if bestdevacc < devacc:
+                bestdevacc = devacc
+                bestwts = [weight_bny, weight_bvy]
 
-        classifier.set_weights(weight_bny, weight_bvy)
-        if bestdevacc < devacc:
-            bestdevacc = devacc
-            bestwts = [weight_bny, weight_bvy]
 
+            lam_k = lam_kp1
+            if itr >= max_iter:
+                break
 
-        lam_k = lam_kp1
-        if itr >= max_iter:
-            break
+    except:
+            traceback.print_exc()
 
-#    except:
-#        raise ValueError('try, raise, except error')
-    return classifier, trac, trll, devac, bestdevacc, bestwts
+    return classifier, trac, trll, devac, bestdevacc, bestwts, normlist
 

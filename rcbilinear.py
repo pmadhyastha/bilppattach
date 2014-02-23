@@ -2,7 +2,8 @@
 
 import scipy.io as sio
 import numpy as np
-import combo_me as co
+#import combo_me as co
+import fix_combo_me as co
 #import maxent_new as maxent
 import bilinear_me as bilme
 import sys
@@ -67,6 +68,7 @@ if inp == 'None':
     print '-------------Bilinear norm sum = ====================', np.sum(cl[5][0]), np.sum(cl[5][1])
     np.savetxt('bil-models/bestbilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][0], fmt='%f')
     np.savetxt('bil-models/bestbilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][1], fmt='%f')
+    np.savetxt('bil-models/sumnorm'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[6], fmt='%f')
 
 elif inp == 'l2':
     print 'calling function type ', inp, ' and tau = ', tau, ' and eta = ', eta
@@ -80,6 +82,7 @@ elif inp == 'l2':
     print '-------------Bilinear norm sum = ====================', np.sum(cl[5][0]), np.sum(cl[5][1])
     np.savetxt('bil-models/bestbilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][0], fmt='%f')
     np.savetxt('bil-models/bestbilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][1], fmt='%f')
+    np.savetxt('bil-models/sumnorm'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[6], fmt='%f')
 elif inp == 'l1':
     print 'calling function type ', inp, ' and tau = ', tau, ' and LC = ', eta
     cl = bilme.BilinearMaxent.train(traintoks, encoding, max_iter=numbers, LC=eta, devset=devtoks, devencode=devencode, tau=tau, penalty='l1')
@@ -92,6 +95,7 @@ elif inp == 'l1':
     print '-------------Bilinear norm sum = ====================', np.sum(cl[5][0]), np.sum(cl[5][1])
     np.savetxt('bil-models/bestbilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][0], fmt='%f')
     np.savetxt('bil-models/bestbilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][1], fmt='%f')
+    np.savetxt('bil-models/sumnorm'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[6], fmt='%f')
 
 elif inp == 'l2p':
     print 'calling function type ', inp, ' and tau = ', tau, ' and LC = ', eta
@@ -105,7 +109,7 @@ elif inp == 'l2p':
     print '-------------Bilinear norm sum = ====================', np.sum(cl[5][0]), np.sum(cl[5][1])
     np.savetxt('bil-models/bestbilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][0], fmt='%f')
     np.savetxt('bil-models/bestbilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][1], fmt='%f')
-
+    np.savetxt('bil-models/sumnorm'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[6], fmt='%f')
 
 elif inp == 'nn':
     print 'calling function type ', inp, ' and tau = ', tau, ' and LC = ', eta
@@ -119,4 +123,4 @@ elif inp == 'nn':
     print '-------------Bilinear norm sum = ====================', np.sum(cl[5][0]), np.sum(cl[5][1])
     np.savetxt('bil-models/bestbilwtbn'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][0], fmt='%f')
     np.savetxt('bil-models/bestbilwtbv'+inp+str(samples)+'tau'+str(tau)+'eta'+str(eta)+str(ppt)+'.txt', cl[5][1], fmt='%f')
-
+    np.savetxt('bil-models/sumnorm'+inp+str(samples)+'tau'+str(tau)+'lc'+str(eta)+str(ppt)+'.txt', cl[6], fmt='%f')
