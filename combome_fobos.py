@@ -1065,8 +1065,8 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 weight_lvy = weight_lvyp1
 
             if l_penalty=='l2f' and b_penalty=='nnf':
+                c = LC_l
                 ####FIX THIS####
-                c = 10
                 den = np.sqrt(itr)
 
                 bn_norm = np.sum(bnS)
