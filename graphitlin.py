@@ -98,3 +98,10 @@ def printbottom(bestset):
 
 
 printdict(inp)
+def printbest():
+    sortedtau = np.sort(bestlc.keys())
+    for t in sortedtau:
+        print ('Tau = ', t, 'best lipschitz constant = ', bestlc[t][0])
+
+
+printbest()
