@@ -49,7 +49,7 @@ for files in glob.glob("bdevaccnn20801*with.txt"):
 
 def printdict(inp):
     if inp == 'taulc':
-        sortedtau = np.sorted(taulcdict.keys()).tolist()
+        sortedtau = np.sort(taulcdict.keys()).tolist()
         for tau in sortedtau:
             printtop(tau)
             lcdict = dict(taulcdict[tau])
