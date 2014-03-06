@@ -35,20 +35,22 @@ for files in glob.glob("bdevaccnn20801*with.txt"):
         iteration = scores.argmax()
 
     #    iteration = scores.argmax() + 1
+        indicator = np.sorted(objective)[-1]
+        if indicator < 1:
+            objcordlist = []
 
-        objcordlist = []
+            for ind, val in enumerate(objective):
+                objcordlist.append((ind+1, val))
 
-        for ind, val in enumerate(objective):
-            objcordlist.append((ind+1, val))
-
-        taulcdict[float(tau)].append((float(lc), objcordlist))
+            taulcdict[float(tau)].append((float(lc), objcordlist))
 
     except:
         continue
 
 def printdict(inp):
     if inp == 'taulc':
-        for tau in taulcdict.keys():
+        sortedtau = np.sorted(taulcdict.keys()).tolist()
+        for tau in sortedtau:
             printtop(tau)
             lcdict = dict(taulcdict[tau])
             for lc in lcdict.keys():
@@ -68,7 +70,7 @@ def printtop(val):
     print ('    width=\\textwidth,')
     print ('    xlabel={},')
     print ('    ylabel={},')
-    print ('    legend style={at={(0.5, -0.1)}, anchor=west},')
+    print ('    legend style={at={(0.5, -0.5)}, anchor=west},')
     print ('    ymajorgrids=true,')
     print ('    xmajorgrids=true,')
     print ('    grid style=dashed,]')
@@ -76,6 +78,9 @@ def printtop(val):
 def printbottom():
     print ('\\end{axis}')
     print ('\\end{tikzpicture}')
+    print ('')
+    print ('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    print ('')
 
 
 printdict(inp)
