@@ -35,7 +35,7 @@ for files in glob.glob("bdevaccnn20801*with.txt"):
         iteration = scores.argmax()
 
     #    iteration = scores.argmax() + 1
-        indicator = np.sorted(objective)[-1]
+        indicator = np.sort(objective)[-1]
         if indicator < 1:
             objcordlist = []
 
