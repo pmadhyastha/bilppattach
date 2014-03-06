@@ -130,6 +130,8 @@ def printdevacc(bestlc):
     print ("    coordinates{")
     print ("    ", ''.join(str(it) for it in bestscorelist))
     print ("    };")
+    best = dict(bestscorelist)[0]
+    print ("\\addplot [red, no markers] coordinates {(-0.1,"+str(best)+") (1,"+str(best)+")};");
 #    for it in bestiterlist:
 #        coordinate = it[0]
 #        itr = it[1]
@@ -145,7 +147,12 @@ def printdevacc(bestlc):
     print ("   \\addlegendentry{Best score list for Linear Model}")
     printbottom((0, (0,0)))
 
+print ("\\documentclass[]{article}")
+print ("\\usepackage{pgfplots}")
+print ("\\begin{document}")
 
 printdict(inp)
 printbest()
 printdevacc(bestlc)
+
+print ("\\end{document}")
