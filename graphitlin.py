@@ -78,7 +78,7 @@ def printdict(inp):
 
 
 def printtop(val):
-    print ('\\begin{figure}')
+#    print ('\\begin{figure}')
     print ('\\begin{tikzpicture}')
     print ('\\begin{axis}[')
     print ('    title={Tau = ', val, '},')
@@ -94,8 +94,8 @@ def printtop(val):
 def printbottom(bestset):
     print ('\\end{axis}')
     print ('\\end{tikzpicture}')
-    print('\\caption{For Tau = ',bestset[0], 'best LC = ', bestset[1][0], 'that obtains objective at iteration 99 = ', bestset[1][1], '}')
-    print ('\\end{figure}')
+#    print('\\caption{For Tau = ',bestset[0], 'best LC = ', bestset[1][0], 'that obtains objective at iteration 99 = ', bestset[1][1], '}')
+#    print ('\\end{figure}')
     print ('')
     print ('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     print ('')
