@@ -44,8 +44,8 @@ for files in glob.glob("devaccl2proximal20801*with.txt"):
 
             taulcdict[float(tau)].append((float(lc), objcordlist))
     except:
-#        continue
-        print (files)
+        continue
+
 def printdict(inp):
     if inp == 'taulc':
         sortedtau = np.sort(taulcdict.keys()).tolist()
