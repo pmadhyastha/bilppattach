@@ -10,16 +10,12 @@ import numpy as np
 import sys
 
 bestlc = {}
-taudevacc = dd(list)
 taulcdict = dd(list)
-taunormdict = dd(list)
 direc = sys.argv[1]
 inp = sys.argv[2]
-maxobj = float(sys.argv[3])
 os.chdir(direc)
 
 for files in glob.glob("bdevaccnn20801*with.txt"):
-
     try:
         base = re.findall("bdevacc|l1|l2p|nn|\d{3,5}|tau[e0-9\-\.]+|lc[e0-9\.-]+|with", files)
 
@@ -32,22 +28,21 @@ for files in glob.glob("bdevaccnn20801*with.txt"):
         scores = np.loadtxt(files)
 
         objective = np.loadtxt('bobjective'+base[1]+base[2]+base[3]+base[4]+base[5]+'.txt')
-
         norm = np.loadtxt('sumnorm'+base[1]+base[2]+base[3]+base[4]+base[5]+'.txt')
         tracc = np.loadtxt('btracc'+base[1]+base[2]+base[3]+base[4]+base[5]+'.txt')
 
+        best = scores.max()
+        iteration = scores.argmax()
+
     #    iteration = scores.argmax() + 1
         indicator = np.sort(objective)[-1]
-        if indicator < maxobj:
+        if indicator < 1:
             objcordlist = []
 
             for ind, val in enumerate(objective):
                 objcordlist.append((ind+1, val))
 
             taulcdict[float(tau)].append((float(lc), objcordlist))
-            taudevacc[float(tau)].append((float(lc), scores))
-            taunormdict[float(tau)].append((float(lc), norm))
-
     except:
         continue
 
@@ -58,8 +53,8 @@ def printdict(inp):
             printtop(tau)
             lcdict = dict(taulcdict[tau])
             sortedlc = np.sort(lcdict.keys()).tolist()
+            bestobj = 1
             for lc in sortedlc:
-                bestobj = 1
                 print ("\\addplot")
                 print ("    coordinates{")
                 print ("    ", ''.join(str(it) for it in lcdict[lc]))
@@ -71,7 +66,6 @@ def printdict(inp):
                         bestobj = tempobj
                         bestlc[tau] = (lc, bestobj)
                 except:
-                    bestlc[tau] = (lc, objective[-1])
                     continue
 
             bestset = [tau, bestlc[tau]]
@@ -80,7 +74,7 @@ def printdict(inp):
 
 
 def printtop(val):
-#    print ('\\begin{figure}')
+    print ('\\begin{figure}')
     print ('\\begin{tikzpicture}')
     print ('\\begin{axis}[')
     print ('    title={Tau = ', val, '},')
@@ -96,63 +90,11 @@ def printtop(val):
 def printbottom(bestset):
     print ('\\end{axis}')
     print ('\\end{tikzpicture}')
-#    print('\\caption{For Tau = ',bestset[0], 'best LC = ', bestset[1][0], 'that obtains objective at iteration 99 = ', bestset[1][1], '}')
-#    print ('\\end{figure}')
+    print('\\caption{For Tau = ',bestset[0], 'best LC = ', bestset[1][0], 'that obtains objective at iteration 99 = ', bestset[1][1], '}')
+    print ('\\end{figure}')
     print ('')
     print ('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     print ('')
 
-def printbest():
-    print ('\\begin{itemize}')
-    sortedtau = np.sort(bestlc.keys())
-    for t in sortedtau:
-        print ('\\item Tau = ', t, 'best lipschitz constant = ', bestlc[t][0])
-
-    print ('\\end{itemize}')
-
-def printdevacc(bestlc):
-    bestscorelist = []
-    bestiterlist = []
-    bestnormlist = []
-    for tau in np.sort(bestlc.keys()):
-        lc = bestlc[tau][0]
-        scoredict = dict(taudevacc[tau])
-        normdict = dict(taunormdict[tau])
-        best = (scoredict[lc]).max()
-        itr = (scoredict[lc]).argmax()
-        optnorm = (normdict[lc])[itr]
-        bestscorelist.append((tau, best))
-        bestiterlist.append(((tau,best), itr))
-        bestnormlist.append((optnorm, best))
-
-    printtop(0.1)
-    print ("\\addplot")
-    print ("    coordinates{")
-    print ("    ", ''.join(str(it) for it in bestscorelist))
-    print ("    };")
-    best = dict(bestscorelist)[0]
-    print ("\\addplot [red, no markers] coordinates {(-0.1,"+str(best)+") (1,"+str(best)+")};");
-#    for it in bestiterlist:
-#        coordinate = it[0]
-#        itr = it[1]
-#        print ("\\node[label={180:{(it="+str(itr+1)+","+str(coordinate[1])+")}},circle,fill,inner sep=2pt] at (axis cs:"+str(coordinate[0])+","+str(coordinate[1])+ ") {};")
-    print ("   \\addlegendentry{Best score list for BiLinear Model}")
-    printbottom((0, (0,0)))
-
-    printtop(0.1)
-    print ("\\addplot")
-    print ("    coordinates{")
-    print ("    ", ''.join(str(it) for it in bestnormlist))
-    print ("    };")
-    print ("   \\addlegendentry{Best score list for Linear Model}")
-    printbottom((0, (0,0)))
-
-print ("\\documentclass[]{article}")
-print ("\\usepackage{pgfplots}")
-print ("\\begin{document}")
 
 printdict(inp)
-printbest()
-printdevacc(bestlc)
-
-print ("\\end{document}")
