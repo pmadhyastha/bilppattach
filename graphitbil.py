@@ -53,7 +53,8 @@ def printdict(inp):
         for tau in sortedtau:
             printtop(tau)
             lcdict = dict(taulcdict[tau])
-            for lc in lcdict.keys():
+            sortedlc = np.sort(lcdict.keys()).tolist()
+            for lc in sortedlc:
                 print ("\\addplot")
                 print ("    coordinates{")
                 print ("    ", ''.join(str(it) for it in lcdict[lc]))
