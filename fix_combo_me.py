@@ -530,11 +530,12 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 bv_norm = np.linalg.norm(weight_bvy, ord=1)
                 lv_norm = np.linalg.norm(weight_lvy, ord=1)
 
-                combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+                combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+                normobj = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
                 lin_norm = ln_norm + lv_norm
                 bil_norm = bn_norm + bv_norm
 
-                objective = ll + combo_norm
+                objective = ll + normobj
 
                 t2 = time()
 
@@ -594,9 +595,10 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 bv_norm = np.sum(bvS)
                 lv_norm = np.linalg.norm(weight_lvy, ord=1)
 
-                combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+                combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+                normobj = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
 
-                objective = ll + combo_norm
+                objective = ll + normobj
 
                 t2 = time()
 
@@ -656,7 +658,8 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 bv_norm = np.linalg.norm(weight_bvy, ord=2)
                 lv_norm = np.linalg.norm(weight_lvy, ord=2)
 
-                combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+                combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+                normobj = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
                 lin_norm = ln_norm + lv_norm
                 bil_norm = bn_norm + bv_norm
 
@@ -688,11 +691,12 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 bv_norm = np.linalg.norm(weight_bvy, ord=2)
                 lv_norm = np.linalg.norm(weight_lvy, ord=2)
 
-                combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+                combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+                normobj = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
                 lin_norm = ln_norm + lv_norm
                 bil_norm = bn_norm + bv_norm
 
-                objective = ll + combo_norm
+                objective = ll + normobj
 
                 t2 = time()
 
@@ -746,11 +750,12 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 bv_norm = np.sum(bvS)
                 lv_norm = np.linalg.norm(weight_lvy, ord=2)
 
-                combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+                combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+                normobj = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
                 lin_norm = ln_norm + lv_norm
                 bil_norm = bn_norm + bv_norm
 
-                objective = ll + combo_norm
+                objective = ll + normobj
 
                 t2 = time()
 
@@ -798,11 +803,12 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 bv_norm = np.linalg.norm(weight_bvy, ord=1)
                 lv_norm = np.linalg.norm(weight_lvy, ord=2)
 
-                combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+                combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+                normobj = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
                 lin_norm = ln_norm + lv_norm
                 bil_norm = bn_norm + bv_norm
 
-                objective = ll + combo_norm
+                objective = ll + normobj
 
                 t2 = time()
 
@@ -847,11 +853,12 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 bv_norm = np.linalg.norm(weight_bvy, ord=2)
                 lv_norm = np.linalg.norm(weight_lvy, ord=1)
 
-                combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+                combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+                normobj = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
                 lin_norm = ln_norm + lv_norm
                 bil_norm = bn_norm + bv_norm
 
-                objective = ll + combo_norm
+                objective = ll + normobj
 
                 t2 = time()
 
@@ -894,11 +901,12 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 bv_norm = np.linalg.norm(weight_bvy, ord=2)
                 lv_norm = np.linalg.norm(weight_lvy, ord=1)
 
-                combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+                combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+                normobj = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
                 lin_norm = ln_norm + lv_norm
                 bil_norm = bn_norm + bv_norm
 
-                objective = ll + combo_norm
+                objective = ll + normobj
 
                 t2 = time()
 
@@ -952,11 +960,12 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 bv_norm = np.sum(bvS)
                 lv_norm = np.linalg.norm(weight_lvy, ord=2)
 
-                combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+                combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+                normobj = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
                 lin_norm = ln_norm + lv_norm
                 bil_norm = bn_norm + bv_norm
 
-                objective = ll + combo_norm
+                objective = ll + normobj
 
                 t2 = time()
 
@@ -1016,11 +1025,12 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
                 bv_norm = np.linalg.norm(weight_bvy, ord=1)
                 lv_norm = np.linalg.norm(weight_lvy, ord=2)
 
-                combo_norm = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
+                combo_norm = (bn_norm + ln_norm + bv_norm + lv_norm)
+                normobj = (tau_b * bn_norm) + (tau_l * ln_norm) + (tau_b * bv_norm) + (tau_l * lv_norm)
                 lin_norm = ln_norm + lv_norm
                 bil_norm = bn_norm + bv_norm
 
-                objective = ll + combo_norm
+                objective = ll + normobj
 
                 t2 = time()
 
