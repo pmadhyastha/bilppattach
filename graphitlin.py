@@ -128,10 +128,10 @@ def printdevacc(bestlc):
     print ("    coordinates{")
     print ("    ", ''.join(str(it) for it in bestscorelist))
     print ("    };")
-    for it in bestiterlist:
-        coordinate = it[0]
-        itr = it[1]
-        print ("\\node[label={180:{(it="+str(itr+1)+","+str(coordinate[1])+")}},circle,fill,inner sep=2pt] at (axis cs:"+str(coordinate[0])+","+str(coordinate[1])+ ") {};")
+#    for it in bestiterlist:
+#        coordinate = it[0]
+#        itr = it[1]
+#        print ("\\node[label={180:{(it="+str(itr+1)+","+str(coordinate[1])+")}},circle,fill,inner sep=2pt] at (axis cs:"+str(coordinate[0])+","+str(coordinate[1])+ ") {};")
     print ("   \\addlegendentry{Best score list for Linear Model}")
     printbottom((0, (0,0)))
 
