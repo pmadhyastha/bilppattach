@@ -9,8 +9,8 @@ import shutil
 import numpy as np
 import sys
 
+bestlc = {}
 taulcdict = dd(list)
-
 direc = sys.argv[1]
 inp = sys.argv[2]
 os.chdir(direc)
@@ -43,7 +43,6 @@ for files in glob.glob("bdevaccnn20801*with.txt"):
                 objcordlist.append((ind+1, val))
 
             taulcdict[float(tau)].append((float(lc), objcordlist))
-
     except:
         continue
 
@@ -54,31 +53,45 @@ def printdict(inp):
             printtop(tau)
             lcdict = dict(taulcdict[tau])
             sortedlc = np.sort(lcdict.keys()).tolist()
+            bestobj = 1
             for lc in sortedlc:
                 print ("\\addplot")
                 print ("    coordinates{")
                 print ("    ", ''.join(str(it) for it in lcdict[lc]))
                 print ("    };")
                 print ("   \\addlegendentry{lc=",lc,"}")
-            printbottom()
+                try:
+                    tempobj = ((lcdict[lc])[99])[1]
+                    if bestobj > tempobj:
+                        bestobj = tempobj
+                        bestlc[tau] = (lc, bestobj)
+                except:
+                    continue
+
+            bestset = [tau, bestlc[tau]]
+
+            printbottom(bestset)
 
 
 def printtop(val):
+    print ('\\begin{figure}')
     print ('\\begin{tikzpicture}')
     print ('\\begin{axis}[')
     print ('    title={Tau = ', val, '},')
     print ('    height=\\textwidth,')
     print ('    width=\\textwidth,')
-    print ('    xlabel={},')
-    print ('    ylabel={},')
+    print ('    xlabel={Iterations},')
+    print ('    ylabel={Objective},')
     print ('    legend style={at={(0.5, -0.5)}, anchor=west},')
     print ('    ymajorgrids=true,')
     print ('    xmajorgrids=true,')
     print ('    grid style=dashed,]')
 
-def printbottom():
+def printbottom(bestset):
     print ('\\end{axis}')
     print ('\\end{tikzpicture}')
+    print('\\caption{For Tau = ',bestset[0], 'best LC = ', bestset[1][0], 'that obtains objective at iteration 99 = ', bestset[1][1], '}')
+    print ('\\end{figure}')
     print ('')
     print ('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     print ('')
