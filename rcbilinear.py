@@ -14,7 +14,7 @@ tau = float(sys.argv[4])
 numbers = int(sys.argv[5])
 ppt = str(sys.argv[6])
 
-if ppt = 'None':
+if ppt == 'None':
     ppt = None
 
 
