@@ -15,6 +15,7 @@ taulcdict = dd(list)
 taunormdict = dd(list)
 direc = sys.argv[1]
 inp = sys.argv[2]
+maxobj = float(sys.argv[3])
 os.chdir(direc)
 
 for files in glob.glob("devaccl2proximal20801*with.txt"):
@@ -37,7 +38,7 @@ for files in glob.glob("devaccl2proximal20801*with.txt"):
 
     #    iteration = scores.argmax() + 1
         indicator = np.sort(objective)[-1]
-        if indicator < 1:
+        if indicator < maxobj:
             objcordlist = []
 
             for ind, val in enumerate(objective):
@@ -57,8 +58,8 @@ def printdict(inp):
             printtop(tau)
             lcdict = dict(taulcdict[tau])
             sortedlc = np.sort(lcdict.keys()).tolist()
-            bestobj = 1
             for lc in sortedlc:
+                bestobj = 1
                 print ("\\addplot")
                 print ("    coordinates{")
                 print ("    ", ''.join(str(it) for it in lcdict[lc]))
@@ -70,6 +71,7 @@ def printdict(inp):
                         bestobj = tempobj
                         bestlc[tau] = (lc, bestobj)
                 except:
+                    bestlc[tau] = (lc, objective[-1])
                     continue
 
             bestset = [tau, bestlc[tau]]
