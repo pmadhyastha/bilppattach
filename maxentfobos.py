@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function, division
+import traceback
 import numpy as np
 import  sys, traceback
 from collections import defaultdict

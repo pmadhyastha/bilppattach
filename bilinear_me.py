@@ -48,9 +48,9 @@ def accuracy(encoding, classifier, gold):
     score = []
     total = 0
     equal = 0
-    eqstuff = []
 
     for (tok, label) in gold:
+        prob = {}
         total += 1
         noun = 0
         verb = 0

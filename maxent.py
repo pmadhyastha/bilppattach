@@ -15,6 +15,13 @@ def calculate_empirical_fcount(train_toks, encoding):
 #    print (numpy.sum(fcount))
     return fcount
 
+def proximal_op(matrix, nu):
+        return np.sign(matrix) * np.maximum(np.abs(matrix) - nu, 0.)
+
+
+def proximal_l2(matrix, nu):
+    return ((1./(1.+nu)) * matrix)
+
 
 def calculate_estimated_fcount(classifier, train_toks, encoding):
     fcount = numpy.zeros(encoding.length(), 'd')
@@ -223,7 +230,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
     trl = []
     dr = []
     itr = 0
-
+    lam_k = 1
     try:
         while True:
             itr += 1
@@ -233,6 +240,7 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
             grad = -(empirical_fcount - estimated_fcount) / len(train_toks)
             dacc = accuracy(classifier, devset)
             weights = classifier.weights()
+            lam_kp1 = float(1 + numpy.sqrt(1 + 4*(lam_k**2 ))) / 2
             normsum = (numpy.linalg.norm(weights, ord=2)**2)
             if norm == None:
                 weights -= (eta * grad) / numpy.sqrt(itr)
@@ -242,16 +250,16 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
                 dr.append(dacc)
 
             elif norm == 'l1':
+
+                normsum = (numpy.linalg.norm(weights, ord=1)**2)
                 nu = 1 / LC
-                lam_k = 1
-                temp_wy = weights - (tau * grad) / LC
-                weights_xp1 = numpy.where(temp_wy > 0, numpy.maximum(temp_wy-nu, 0), numpy.minimum(temp_wy+nu, 0))
-                lam_kp1 = float(1 + numpy.sqrt(1 + 4*(lam_k**2 ))) / 2
+                temp_wy = weights - grad / LC
+                weights_xp1 = proximal_op(temp_wvy, nu)
                 lr = (lam_k - 1) / lam_kp1
                 weights_yp1 = weights_xp1 + lr * (weights_xp1 - weights_x)
                 weights_x = weights_xp1
                 weights = weights_yp1
-                print ('%9d   %14.5f  %9.3f, %9.3f' %(itr, ll, acc, dacc))
+                print ('%9d   %14.5f  %9.3f, %9.3f' %(itr, ll+(tau*normsum), acc, dacc))
                 tr.append(acc)
                 trl.append(ll)
                 dr.append(dacc)
@@ -265,6 +273,23 @@ def train_maxent_classifier_with_gd(train_toks, encoding, labels, max_iter, LC, 
                 tr.append(acc)
                 trl.append(ll)
                 dr.append(dacc)
+
+
+            elif norm == 'l2p':
+
+                normsum = (numpy.linalg.norm(weights, ord=2)**2)
+                nu = 1 / LC
+                temp_wy = weights - (tau * grad) / LC
+                weights_xp2 = proximal_l2(temp_wvy, nu)
+                lr = (lam_k - 1) / lam_kp1
+                weights_yp1 = weights_xp1 + lr * (weights_xp1 - weights_x)
+                weights_x = weights_xp1
+                weights = weights_yp1
+                print ('%9d   %14.5f  %9.3f, %9.3f' %(itr, ll+(tau*normsum), acc, dacc))
+                tr.append(acc)
+                trl.append(ll)
+                dr.append(dacc)
+
 
             classifier.set_weights(weights)
             if itr >= max_iter:
