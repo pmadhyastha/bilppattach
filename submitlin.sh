@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#$ -l h_vmem=20G
+#$ -l h_vmem=2G
 #$ -V
 #$ -S /bin/bash
 #$ -o /home/usuaris/pranava/bmaps/new/experiments/qsublogs

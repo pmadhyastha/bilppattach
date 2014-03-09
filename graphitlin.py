@@ -124,6 +124,10 @@ def printdevacc(bestlc):
         bestscorelist.append((tau, best))
         bestiterlist.append(((tau,best), itr))
         bestnormlist.append((optnorm, best))
+    temp = dict(bestnormlist)
+    bestnormlist = []
+    for it in np.sort(temp.keys()):
+        bestnormlist.append((it, temp[it]))
 
     printtop(0.1)
     print ("\\addplot")

@@ -21,7 +21,6 @@ os.chdir(direc)
 for files in glob.glob("comdevaccl2pnn*with*.txt"):
     try:
         base = re.findall("comdevacc|l2pl1|l2pl2p|l2pnn|\d{3,5}|cl[e0-9\-\.]+|cb[e0-9-\.]+|lc[e0-9\.-]+|with", files)
-        print(base)
         sample = int(base[2])
         ppt = str(base[6])
         regtype = str(base[1])
@@ -44,9 +43,9 @@ for files in glob.glob("comdevaccl2pnn*with*.txt"):
             for ind, val in enumerate(objective):
                 objcordlist.append((ind+1, val))
 
-            taulcdict[(float(cl),float(cb))].append((float(lc), objcordlist))
-            taudevacc[(float(cl),float(cb))].append((float(lc), scores))
-            taunormdict[(float(cl),float(cb))].append((float(lc), cnorm))
+            taulcdict[(cl+', '+cb)].append((float(lc), objcordlist))
+            taudevacc[cl+', '+cb].append((float(lc), scores))
+            taunormdict[cl+', '+cb].append((float(lc), cnorm))
 
     except:
         continue
@@ -125,13 +124,18 @@ def printdevacc(bestlc):
         bestiterlist.append(((tau,best), itr))
         bestnormlist.append((optnorm, best))
 
+    temp = dict(bestnormlist)
+    bestnormlist = []
+    for it in np.sort(temp.keys()):
+        bestnormlist.append((it, temp[it]))
+
     printtop(0.1)
     print ("\\addplot")
     print ("    coordinates{")
     print ("    ", ''.join(str(it) for it in bestscorelist))
     print ("    };")
-    best = dict(bestscorelist)[0]
-    print ("\\addplot [red, no markers] coordinates {(-0.1,"+str(best)+") (1,"+str(best)+")};");
+#    best = dict(bestscorelist)['1, 0']
+#    print ("\\addplot [red, no markers] coordinates {(-0.1,"+str(best)+") (1,"+str(best)+")};");
 #    for it in bestiterlist:
 #        coordinate = it[0]
 #        itr = it[1]
