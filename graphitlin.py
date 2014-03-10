@@ -60,6 +60,7 @@ def printdict(inp):
             sortedlc = np.sort(lcdict.keys()).tolist()
             for lc in sortedlc:
                 bestobj = 1
+                bestlc[tau] = (lc, bestobj)
                 print ("\\addplot")
                 print ("    coordinates{")
                 print ("    ", ''.join(str(it) for it in lcdict[lc]))
@@ -69,9 +70,11 @@ def printdict(inp):
                     tempobj = ((lcdict[lc])[99])[1]
                     if bestobj > tempobj:
                         bestobj = tempobj
-                        bestlc[tau] = (lc, bestobj)
+                        if bestlc[tau][1] > tempobj:
+                            bestlc[tau] = (lc, bestobj)
                 except:
-                    bestlc[tau] = (lc, objective[-1])
+                    if bestlc[tau][1] > objective[-1]:
+                        bestlc[tau] = (lc, objective[-1])
                     continue
 
             bestset = [tau, bestlc[tau]]
