@@ -30,5 +30,10 @@ devtokens = [(co.word_features(t),l) for t,l in devencode.train_toks()]
 
 encoding = maxent.BinaryMaxentFeatureEncoding.train(traintokens, labels=None)
 inweights = np.zeros(encoding.length())
+tpe = int(sys.argv[1])
+tau = float(sys.argv[2])
+classify = testmaxentfn.Classification(traintokens=traintokens, develtokens=devtokens, encoding=encoding, weights=inweights, tau=tau, itr=250, tp=tpe)
+classify.train()
+classify.saveall()
 
-classify = testmaxentfn.Classification(traintokens=traintokens, develtokens=devtokens, encoding=encoding, weights=inweights, tau=0.01, itr=50, tp=0)
+

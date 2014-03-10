@@ -44,12 +44,12 @@ for files in glob.glob("devaccl2proximal20801*with.txt"):
 
             convlist = convergence(objective)
 
-            bestdevacc = ()
-            for ind in convlist:
-                if bestdevacc[1] > convlist[ind]:
-                    bestdevacc = (ind, convlist[ind])
+#            bestdevacc = ()
+#            for ind in convlist:
+#                if bestdevacc[1] > convlist[ind]:
+#                    bestdevacc = (ind, convlist[ind])
 
-            bestscoresdict[float(tau)].append((float(lc), bestdevacc))
+#            bestscoresdict[float(tau)].append((float(lc), bestdevacc))
 
 
 
@@ -145,13 +145,13 @@ def printdevacc(bestlc):
     bestnormlist = []
     for tau in np.sort(bestlc.keys()):
         lc = bestlc[tau][0]
-#        scoredict = dict(taudevacc[tau])
+        scoredict = dict(taudevacc[tau])
         normdict = dict(taunormdict[tau])
-        scoredict = dict(bestscoresdict[tau])
-        best = (scoredict[lc])[1]
-        itr = (scoredict[lc])[0]
-#        best = (scoredict[lc]).max()
-#        itr = (scoredict[lc]).argmax()
+#        scoredict = dict(bestscoresdict[tau])
+#        best = (scoredict[lc])[1]
+#        itr = (scoredict[lc])[0]
+        best = (scoredict[lc])[-1]
+        itr = (scoredict[lc])[-1]
         optnorm = (normdict[lc])[itr]
         bestscorelist.append((tau, best))
         bestiterlist.append(((tau,best), itr))
