@@ -13,6 +13,7 @@ bestlc = {}
 taudevacc = dd(list)
 taulcdict = dd(list)
 taunormdict = dd(list)
+taunormcorddict = dd(list)
 bestscoresdict = dd(list)
 direc = sys.argv[1]
 inp = sys.argv[2]
@@ -51,14 +52,18 @@ for files in glob.glob("devaccl2proximal20801*with.txt"):
 
 #            bestscoresdict[float(tau)].append((float(lc), bestdevacc))
 
-
+            normcordlist = []
 
             for ind, val in enumerate(objective):
                 objcordlist.append((ind+1, val))
 
+            for ind, val in enumerate(norm):
+                normcordlist.append((ind+1, val))
+
             taulcdict[float(tau)].append((float(lc), objcordlist))
             taudevacc[float(tau)].append((float(lc), scores))
             taunormdict[float(tau)].append((float(lc), norm))
+            taunormcorddict[float(tau)].append((float(lc), normcordlist))
     except:
         continue
 
@@ -88,6 +93,22 @@ def printdict(inp):
             bestset = [tau, bestlc[tau]]
 
             printbottom(bestset)
+
+def printnormdict():
+    sortedtau = np.sort(taunormcorddict.keys()).tolist()
+    for tau in sortedtau:
+        printtop(tau, 'normit')
+        lcdict = dict(taunormcorddict[tau])
+        sortedlc = np.sort(lcdict.keys()).tolist()
+        for lc in sortedlc:
+            print ("\\addplot")
+            print ("    coordinates{")
+            print ("    ", ''.join(str(it) for it in lcdict[lc]))
+            print ("    };")
+            print ("   \\addlegendentry{lc=",lc,"}")
+
+        printbottom((0, (0,0)))
+
 
 
 def printtop(val,tp):
@@ -208,6 +229,7 @@ print ("\\usepackage{pgfplots}")
 print ("\\begin{document}")
 
 printdict(inp)
+printnormdict()
 printbest()
 printdevacc(bestlc)
 
