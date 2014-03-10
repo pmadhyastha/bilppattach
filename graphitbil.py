@@ -37,12 +37,13 @@ for files in glob.glob("bdevaccnn20801*with.txt"):
         tracc = np.loadtxt('btracc'+base[1]+base[2]+base[3]+base[4]+base[5]+'.txt')
 
     #    iteration = scores.argmax() + 1
-        indicator = np.sort(objective)[-1]
-        if indicator < maxobj:
+    #    indicator = np.sort(objective)[-1]
+        if len(objective) >= 99:
             objcordlist = []
 
             for ind, val in enumerate(objective):
                 objcordlist.append((ind+1, val))
+
 
             taulcdict[float(tau)].append((float(lc), objcordlist))
             taudevacc[float(tau)].append((float(lc), scores))
@@ -55,11 +56,11 @@ def printdict(inp):
     if inp == 'taulc':
         sortedtau = np.sort(taulcdict.keys()).tolist()
         for tau in sortedtau:
-            printtop(tau)
+            bestobj = 1
+            printtop(tau, 'objit')
             lcdict = dict(taulcdict[tau])
             sortedlc = np.sort(lcdict.keys()).tolist()
             for lc in sortedlc:
-                bestobj = 1
                 print ("\\addplot")
                 print ("    coordinates{")
                 print ("    ", ''.join(str(it) for it in lcdict[lc]))
@@ -67,7 +68,7 @@ def printdict(inp):
                 print ("   \\addlegendentry{lc=",lc,"}")
                 try:
                     tempobj = ((lcdict[lc])[99])[1]
-                    if bestobj > tempobj:
+                    if tempobj <= bestobj:
                         bestobj = tempobj
                         bestlc[tau] = (lc, bestobj)
                 except:
@@ -79,19 +80,47 @@ def printdict(inp):
             printbottom(bestset)
 
 
-def printtop(val):
+
+
+def printtop(val,tp):
 #    print ('\\begin{figure}')
     print ('\\begin{tikzpicture}')
     print ('\\begin{axis}[')
-    print ('    title={Tau = ', val, '},')
     print ('    height=\\textwidth,')
     print ('    width=\\textwidth,')
-    print ('    xlabel={Iterations},')
-    print ('    ylabel={Objective},')
+    if tp == 'objit':
+        print ('    title={Tau = ', val, '},')
+        print ('    xlabel={iterations},')
+        print ('    ylabel={objective},')
+        print ('    ymin=0.7,')
+        print ('    ymax=0.0,')
+    elif tp == 'devaccnorm':
+        print ('    title={Devacc vs Norm},')
+        print ('    xlabel={norm},')
+        print ('    ylabel={devacc},')
+    elif tp == 'normtau':
+        print ('    title={norm vs tau},')
+        print ('    xlabel={tau},')
+        print ('    ylabel={norm},')
+    elif tp == 'devaccit':
+        print ('    title={Devacc vs Iteration},')
+        print ('    xlabel={iteration},')
+        print ('    ylabel={devacc},')
+    elif tp == 'normit':
+        print ('    title={Norm vs Iteration}')
+        print ('    xlabel={iteration},')
+        print ('    ylabel={norm},')
+    elif tp == 'objnorm':
+        print ('    title={Tau = ', val, '},')
+        print ('    xlabel={norm},')
+        print ('    ylabel={objective},')
+        print ('    ymin=0.7,')
+        print ('    ymax=0.0,')
     print ('    legend style={at={(0.5, -0.5)}, anchor=west},')
     print ('    ymajorgrids=true,')
     print ('    xmajorgrids=true,')
     print ('    grid style=dashed,]')
+
 
 def printbottom(bestset):
     print ('\\end{axis}')
@@ -118,20 +147,20 @@ def printdevacc(bestlc):
         lc = bestlc[tau][0]
         scoredict = dict(taudevacc[tau])
         normdict = dict(taunormdict[tau])
-        best = (scoredict[lc]).max()
-        itr = (scoredict[lc]).argmax()
-        optnorm = (normdict[lc])[itr]
+        best = (scoredict[lc])[-1]
+        itr = (scoredict[lc])[-1]
+        optnorm = (normdict[lc])[-1]
         bestscorelist.append((tau, best))
         bestiterlist.append(((tau,best), itr))
-        bestnormlist.append((optnorm, best))
+        bestnormlist.append((tau, optnorm))
 
 
-    temp = dict(bestnormlist)
-    bestnormlist = []
-    for it in np.sort(temp.keys()):
-        bestnormlist.append((it, temp[it]))
+#    temp = dict(bestnormlist)
+#    bestnormlist = []
+#    for it in np.sort(temp.keys()):
+#        bestnormlist.append((it, temp[it]))
 
-    printtop(0.1)
+    printtop(0.1, 'devaccit')
     print ("\\addplot")
     print ("    coordinates{")
     print ("    ", ''.join(str(it) for it in bestscorelist))
@@ -145,7 +174,7 @@ def printdevacc(bestlc):
     print ("   \\addlegendentry{Best score list for BiLinear Model}")
     printbottom((0, (0,0)))
 
-    printtop(0.1)
+    printtop(0.1, 'normtau')
     print ("\\addplot")
     print ("    coordinates{")
     print ("    ", ''.join(str(it) for it in bestnormlist))
