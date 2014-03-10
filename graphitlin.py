@@ -42,7 +42,7 @@ for files in glob.glob("devaccl2proximal20801*with.txt"):
         if len(objective) >= 99:
             objcordlist = []
 
-            convlist = convergence(objective)
+#            convlist = convergence(objective)
 
 #            bestdevacc = ()
 #            for ind in convlist:
@@ -67,7 +67,7 @@ def printdict(inp):
         sortedtau = np.sort(taulcdict.keys()).tolist()
         for tau in sortedtau:
             bestobj = 1
-            printtop(tau)
+            printtop(tau, 'objit')
             lcdict = dict(taulcdict[tau])
             sortedlc = np.sort(lcdict.keys()).tolist()
             for lc in sortedlc:
@@ -90,20 +90,40 @@ def printdict(inp):
             printbottom(bestset)
 
 
-def printtop(val):
+def printtop(val,tp):
 #    print ('\\begin{figure}')
     print ('\\begin{tikzpicture}')
     print ('\\begin{axis}[')
-    print ('    title={Tau = ', val, '},')
     print ('    height=\\textwidth,')
     print ('    width=\\textwidth,')
-    print ('    xlabel={Iterations},')
-    print ('    ylabel={objective},')
+    if tp == 'objit':
+        print ('    title={Tau = ', val, '},')
+        print ('    xlabel={iterations},')
+        print ('    ylabel={objective},')
+        print ('    ymin=0.7')
+        print ('    ymax=0.0')
+    elif tp == 'devaccnorm':
+        print ('    title={Devacc vs Norm}')
+        print ('    xlabel={norm},')
+        print ('    ylabel={devacc},')
+    elif tp == 'devaccit':
+        print ('    title={Devacc vs Iteration}')
+        print ('    xlabel={iteration},')
+        print ('    ylabel={devacc},')
+    elif tp == 'normit':
+        print ('    title={Norm vs Iteration}')
+        print ('    xlabel={iteration},')
+        print ('    ylabel={norm},')
+    elif tp == 'objnorm':
+        print ('    title={Tau = ', val, '},')
+        print ('    xlabel={norm},')
+        print ('    ylabel={objective},')
+        print ('    ymin=0.7')
+        print ('    ymax=0.0')
     print ('    legend style={at={(0.5, -0.5)}, anchor=west},')
     print ('    ymajorgrids=true,')
     print ('    xmajorgrids=true,')
     print ('    grid style=dashed,]')
-
 
 def convergence(objset):
     conv_list = []
@@ -161,7 +181,7 @@ def printdevacc(bestlc):
     for it in np.sort(temp.keys()):
         bestnormlist.append((it, temp[it]))
 
-    printtop(0.1)
+    printtop(0.1, 'devaccit')
     print ("\\addplot")
     print ("    coordinates{")
     print ("    ", ''.join(str(it) for it in bestscorelist))
@@ -175,7 +195,7 @@ def printdevacc(bestlc):
     print ("   \\addlegendentry{Best score list for Linear Model}")
     printbottom((0, (0,0)))
 
-    printtop(0.1)
+    printtop(0.1, 'devaccnorm')
     print ("\\addplot")
     print ("    coordinates{")
     print ("    ", ''.join(str(it) for it in bestnormlist))
