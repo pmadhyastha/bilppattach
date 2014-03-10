@@ -55,12 +55,11 @@ def printdict(inp):
     if inp == 'taulc':
         sortedtau = np.sort(taulcdict.keys()).tolist()
         for tau in sortedtau:
+            bestobj = 1
             printtop(tau)
             lcdict = dict(taulcdict[tau])
             sortedlc = np.sort(lcdict.keys()).tolist()
             for lc in sortedlc:
-                bestobj = 1
-                bestlc[tau] = (lc, bestobj)
                 print ("\\addplot")
                 print ("    coordinates{")
                 print ("    ", ''.join(str(it) for it in lcdict[lc]))
@@ -68,13 +67,11 @@ def printdict(inp):
                 print ("   \\addlegendentry{lc=",lc,"}")
                 try:
                     tempobj = ((lcdict[lc])[99])[1]
-                    if bestobj > tempobj:
+                    if tempobj <= bestobj:
                         bestobj = tempobj
-                        if bestlc[tau][1] > tempobj:
-                            bestlc[tau] = (lc, bestobj)
+                        bestlc[tau] = (lc, bestobj)
                 except:
-                    if bestlc[tau][1] > objective[-1]:
-                        bestlc[tau] = (lc, objective[-1])
+                    bestlc[tau] = (lc, objective[-1])
                     continue
 
             bestset = [tau, bestlc[tau]]
