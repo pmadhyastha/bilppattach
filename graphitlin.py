@@ -121,14 +121,18 @@ def printtop(val,tp):
         print ('    title={Tau = ', val, '},')
         print ('    xlabel={iterations},')
         print ('    ylabel={objective},')
-        print ('    ymin=0.7')
-        print ('    ymax=0.0')
+        print ('    ymin=0.7,')
+        print ('    ymax=0.0,')
     elif tp == 'devaccnorm':
-        print ('    title={Devacc vs Norm}')
+        print ('    title={Devacc vs Norm},')
         print ('    xlabel={norm},')
         print ('    ylabel={devacc},')
+    elif tp == 'normtau':
+        print ('    title={norm vs tau},')
+        print ('    xlabel={tau},')
+        print ('    ylabel={norm},')
     elif tp == 'devaccit':
-        print ('    title={Devacc vs Iteration}')
+        print ('    title={Devacc vs Iteration},')
         print ('    xlabel={iteration},')
         print ('    ylabel={devacc},')
     elif tp == 'normit':
@@ -139,8 +143,8 @@ def printtop(val,tp):
         print ('    title={Tau = ', val, '},')
         print ('    xlabel={norm},')
         print ('    ylabel={objective},')
-        print ('    ymin=0.7')
-        print ('    ymax=0.0')
+        print ('    ymin=0.7,')
+        print ('    ymax=0.0,')
     print ('    legend style={at={(0.5, -0.5)}, anchor=west},')
     print ('    ymajorgrids=true,')
     print ('    xmajorgrids=true,')
@@ -193,14 +197,15 @@ def printdevacc(bestlc):
 #        itr = (scoredict[lc])[0]
         best = (scoredict[lc])[-1]
         itr = (scoredict[lc])[-1]
-        optnorm = (normdict[lc])[itr]
+        optnorm = (normdict[lc])[-1]
         bestscorelist.append((tau, best))
         bestiterlist.append(((tau,best), itr))
-        bestnormlist.append((optnorm, best))
+#        bestnormlist.append((optnorm, best))
+        bestnormlist.append((tau, optnorm))
     temp = dict(bestnormlist)
-    bestnormlist = []
-    for it in np.sort(temp.keys()):
-        bestnormlist.append((it, temp[it]))
+#    bestnormlist = []
+#    for it in np.sort(temp.keys()):
+#        bestnormlist.append((it, temp[it]))
 
     printtop(0.1, 'devaccit')
     print ("\\addplot")
@@ -216,7 +221,7 @@ def printdevacc(bestlc):
     print ("   \\addlegendentry{Best score list for Linear Model}")
     printbottom((0, (0,0)))
 
-    printtop(0.1, 'devaccnorm')
+    printtop(0.1, 'normtau')
     print ("\\addplot")
     print ("    coordinates{")
     print ("    ", ''.join(str(it) for it in bestnormlist))
