@@ -2,6 +2,7 @@
 from __future__ import print_function, unicode_literals, division
 #import sklearn.preprocessing as skp
 import numpy as np
+import scipy
 import traceback
 from time import time
 np.seterr(all='raise')
@@ -471,6 +472,10 @@ def train_combo_maxent_classifier_with_gd(train_toks, encoding, algorithm, max_i
 
                 bnU, bnS, bnVt = np.linalg.svd(temp_by_n)
                 bvU, bvS, bvVt = np.linalg.svd(temp_by_v)
+
+#                bnU, bnS, bnVt = scipy.linalg.svd(temp_by_n)
+#                bvU, bvS, bvVt = scipy.linalg.svd(temp_by_v)
+
 
                 bnS = np.maximum(bnS - nu, 0)
                 bvS = np.maximum(bvS - nu, 0)

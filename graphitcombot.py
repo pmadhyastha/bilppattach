@@ -13,6 +13,8 @@ bestlc = {}
 taudevacc = dd(list)
 taulcdict = dd(list)
 taunormdict = dd(list)
+taulnormdict = dd(list)
+taubnormdict = dd(list)
 direc = sys.argv[1]
 inp = sys.argv[2]
 maxobj = float(sys.argv[3])
@@ -36,8 +38,13 @@ for files in glob.glob("comdevaccl2pnn*with*.txt"):
         tracc = np.loadtxt('comtracc'+base[1]+base[2]+base[3]+base[4]+base[5]+base[6]+'.txt')
 
     #    iteration = scores.argmax() + 1
+<<<<<<< HEAD
 #        indicator = np.sort(objective)[-1]
 #        if indicator < maxobj:
+=======
+    #    indicator = np.sort(objective)[-1]
+    #    if indicator < maxobj:
+>>>>>>> 7f1501406aff9727b2a5a40cf034504529634509
         if len(objective) >= 99:
             objcordlist = []
 
@@ -47,6 +54,8 @@ for files in glob.glob("comdevaccl2pnn*with*.txt"):
             taulcdict[(cl+', '+cb)].append((float(lc), objcordlist))
             taudevacc[cl+', '+cb].append((float(lc), scores))
             taunormdict[cl+', '+cb].append((float(lc), cnorm))
+            taulnormdict[cl+', '+cb].append((float(lc), lnorm))
+            taubnormdict[cl+', '+cb].append((float(lc), bnorm))
 
     except:
         continue
@@ -58,8 +67,8 @@ def printdict(inp):
             printtop(tau, 'objit')
             lcdict = dict(taulcdict[tau])
             sortedlc = np.sort(lcdict.keys()).tolist()
+            bestobj = 1
             for lc in sortedlc:
-                bestobj = 1
                 print ("\\addplot")
                 print ("    coordinates{")
                 print ("    ", ''.join(str(it) for it in lcdict[lc]))
@@ -73,8 +82,10 @@ def printdict(inp):
                 except:
                     bestlc[tau] = (lc, objective[-1])
                     continue
-
-            bestset = [tau, bestlc[tau]]
+            try:
+                bestset = [tau, bestlc[tau]]
+            except:
+                continue
 
             printbottom(bestset)
 
@@ -135,16 +146,24 @@ def printdevacc(bestlc):
     bestscorelist = []
     bestiterlist = []
     bestnormlist = []
+    bestlnormlist = []
+    bestbnormlist = []
     for tau in np.sort(bestlc.keys()):
         lc = bestlc[tau][0]
         scoredict = dict(taudevacc[tau])
         normdict = dict(taunormdict[tau])
-        best = (scoredict[lc]).max()
-        itr = (scoredict[lc]).argmax()
-        optnorm = (normdict[lc])[itr]
+        lnormdict = dict(taulnormdict[tau])
+        bnormdict = dict(taubnormdict[tau])
+        best = (scoredict[lc])[-1]
+        itr = (scoredict[lc])[-1]
+        optnorm = (normdict[lc])[-1]
+        loptnorm = (lnormdict[lc])[-1]
+        boptnorm = (bnormdict[lc])[-1]
         bestscorelist.append((tau, best))
         bestiterlist.append(((tau,best), itr))
         bestnormlist.append((optnorm, best))
+        bestlnormlist.append((tau, loptnorm))
+        bestbnormlist.append((tau, boptnorm))
 
     temp = dict(bestnormlist)
     bestnormlist = []
@@ -172,6 +191,21 @@ def printdevacc(bestlc):
     print ("    };")
     print ("   \\addlegendentry{Best score list for Linear Model}")
     printbottom((0, (0,0)))
+
+    printtop(0.1)
+    print ("\\addplot")
+    print ("    coordinates{")
+    print ("    ", ''.join(str(it) for it in bestlnormlist))
+    print ("    };")
+    printbottom((0, (0,0)))
+
+    printtop(0.1)
+    print ("\\addplot")
+    print ("    coordinates{")
+    print ("    ", ''.join(str(it) for it in bestbnormlist))
+    print ("    };")
+    printbottom((0, (0,0)))
+
 
 print ("\\documentclass[]{article}")
 print ("\\usepackage{pgfplots}")
