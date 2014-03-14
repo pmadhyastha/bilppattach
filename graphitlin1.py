@@ -19,6 +19,25 @@ inp = sys.argv[2]
 maxobj = float(sys.argv[3])
 os.chdir(direc)
 
+
+def convergence(objset):
+    conv_list = []
+    for epoch in xrange(len(objset)):
+        if epoch > 0:
+            if np.abs(objset[epoch]-objset[epoch-1]) <= 0.01:
+                if len(conv_list) > 0:
+                    if (epoch - conv_list[len(conv_list)-1]) < 2:
+                        conv_list.append(epoch)
+                    else:
+                        conv_list = []
+                else:
+                    conv_list.append(epoch)
+    if len(conv_list) > 2:
+        return conv_list
+    else:
+        return []
+
+
 for files in glob.glob("devaccl2proximal20801*with.txt"):
 
     try:
@@ -41,24 +60,20 @@ for files in glob.glob("devaccl2proximal20801*with.txt"):
 #        indicator = np.sort(objective)[-1]
         if len(objective) >= 99:
             objcordlist = []
-
             convlist = convergence(objective)
+            bestdevacc = (0,0)
+            if convlist != []:
+                for ind in convlist:
+                    if bestdevacc[1] < scores[ind]:
+                        bestdevacc = (ind, scores[ind])            
+                bestscoresdict[float(tau)].append((float(lc), bestdevacc))
 
-            bestdevacc = ()
-            for ind in convlist:
-                if bestdevacc[1] > convlist[ind]:
-                    bestdevacc = (ind, convlist[ind])
+                for ind, val in enumerate(objective):
+                    objcordlist.append((ind+1, val))
 
-            bestscoresdict[float(tau)].append((float(lc), bestdevacc))
-
-
-
-            for ind, val in enumerate(objective):
-                objcordlist.append((ind+1, val))
-
-            taulcdict[float(tau)].append((float(lc), objcordlist))
-            taudevacc[float(tau)].append((float(lc), scores))
-            taunormdict[float(tau)].append((float(lc), norm))
+                taulcdict[float(tau)].append((float(lc), objcordlist))
+                taudevacc[float(tau)].append((float(lc), scores))
+                taunormdict[float(tau)].append((float(lc), norm))
     except:
         continue
 
@@ -84,7 +99,6 @@ def printdict(inp):
                 except:
                     bestlc[tau] = (lc, objective[-1])
                     continue
-
             bestset = [tau, bestlc[tau]]
 
             printbottom(bestset)
@@ -105,22 +119,6 @@ def printtop(val):
     print ('    grid style=dashed,]')
 
 
-def convergence(objset):
-    conv_list = []
-    for epoch in xrange(len(objset)):
-        if epoch > 0:
-            if np.abs(objset[epoch]-objset[epoch-1]) < 0.01:
-                if len(conv_list) > 0:
-                    if (epoch - conv_list[len(conv_list)-1]) < 2:
-                        conv_list.append(epoch)
-                    else:
-                        conv_list = []
-                else:
-                    conv_list.append(epoch)
-    if len(conv_list) > 2:
-        return conv_list
-    else:
-        return []
 
 def printbottom(bestset):
     print ('\\end{axis}')
@@ -166,8 +164,8 @@ def printdevacc(bestlc):
     print ("    coordinates{")
     print ("    ", ''.join(str(it) for it in bestscorelist))
     print ("    };")
-    best = dict(bestscorelist)[0]
-    print ("\\addplot [red, no markers] coordinates {(-0.1,"+str(best)+") (1,"+str(best)+")};");
+#    best = dict(bestscorelist)[0]
+#    print ("\\addplot [red, no markers] coordinates {(-0.1,"+str(best)+") (1,"+str(best)+")};");
 #    for it in bestiterlist:
 #        coordinate = it[0]
 #        itr = it[1]
