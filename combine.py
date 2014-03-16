@@ -5,6 +5,7 @@ import sys
 import fix_combo_me as co
 import bilmenew as bilme
 import maxentnew as maxent
+import scipy.io as sio
 
 ppt = sys.argv[1]
 samples = sys.argv[2]
@@ -16,20 +17,20 @@ b_tau = sys.argv[6]
 b_lc = sys.argv[7]
 b_regtype = sys.argv[8]
 
-gamma = sys.argv[9]
+gamma = float(sys.argv[9])
 
 def load(ppt, samples, l_tau, l_lc, l_regtype, b_tau, b_lc, b_regtype):
 
-    ln = np.loadtxt('lin-models/bestlinwtln'+l_regtype+samples+'tau'+l_regtype+'lc'+l_lc+ppt+'.txt')
-    lv = np.loadtxt('lin-models/bestlinwtlv'+l_regtype+samples+'tau'+l_regtype+'lc'+l_lc+ppt+'.txt')
-    bn = np.loadtxt('bil-models/bestbilwtbn'+regtype+samples+'tau'+b_tau+'eta'+b_lc+ppt+'.txt')
-    bv = np.loadtxt('bil-models/bestbilwtbv'+regtype+samples+'tau'+b_tau+'eta'+b_lc+ppt+'.txt')
+    ln = np.loadtxt('lin-models/bestlinwtln'+l_regtype+samples+'tau'+l_tau+'lc'+l_lc+ppt+'.txt')
+    lv = np.loadtxt('lin-models/bestlinwtlv'+l_regtype+samples+'tau'+l_tau+'lc'+l_lc+ppt+'.txt')
+    bv = np.loadtxt('bil-models/bestbilwtbn'+b_regtype+samples+'tau'+b_tau+'eta'+b_lc+ppt+'.txt')
+    bn = np.loadtxt('bil-models/bestbilwtbv'+b_regtype+samples+'tau'+b_tau+'eta'+b_lc+ppt+'.txt')
 
     traindata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in open('clean/cleantrain.txt')]
     devdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in open('clean/cleandev.txt')]
     testdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in open('clean/cleantest.txt')]
 
-    traindata = traindata[:samples]
+    traindata = traindata[:int(samples)]
 
     phih = sio.mmread('clean/trh1k.mtx')
     phim = sio.mmread('clean/trm1k.mtx')
@@ -50,7 +51,7 @@ def load(ppt, samples, l_tau, l_lc, l_regtype, b_tau, b_lc, b_regtype):
 
     data = [devtoks, devtokens]
 
-    trlinencoding = maxent.BinaryMaxentFeatureEncoding.train(trainokens)
+    trlinencoding = maxent.BinaryMaxentFeatureEncoding.train(traintokens)
 
     return trlinencoding, devencode, [ln, lv], [bn, bv], data
 #    if b_regtype == l1:
@@ -69,24 +70,24 @@ def calculate_accuracy(lencoding, bencoding, lweights, bweights, data, gamma=0.5
     gold = data[0]
     featureset = data[1]
 
-    bn = np.matrix(bil_weights[0])
-    bv = np.matrix(bil_weights[1])
+    bn = np.matrix(bweights[0])
+    bv = np.matrix(bweights[1])
 
-    ln = np.array(lin_weights[0])
-    lv = np.array(lin_weights[1])
+    ln = np.array(lweights[0])
+    lv = np.array(lweights[1])
 
     count_samples = 0
     score = []
 
     for (tok, label) in gold:
+        scoreln = 0
+        scorelv = 0
         prob = {}
-
-        feature_vector_n = lencoding.encode(featureset[count], 'n')
-        feature_vector_v = lencoding.encode(featureset[count], 'v')
+        feature_vector_n = lencoding.encode(featureset[count_samples][0], 'n')
+        feature_vector_v = lencoding.encode(featureset[count_samples][0], 'v')
         v, n, m = bencoding.bil_u_encode(tok)
-
-        scorebn = np.exp((n*(bn*m.T))[0,0])
-        scorebv = np.exp((v*(bv*m.T))[0,0])
+        scorebn = (n*(bn*m.T))[0,0]
+        scorebv = (v*(bv*m.T))[0,0]
 
         for (f_id, f_val) in feature_vector_n:
             scoreln += ln[f_id] * f_val
@@ -94,9 +95,8 @@ def calculate_accuracy(lencoding, bencoding, lweights, bweights, data, gamma=0.5
         for (f_id, f_val) in feature_vector_v:
             scorelv += lv[f_id] * f_val
 
-        exp_bn = scorebn / (scorebn + scorebv)
-        exp_bv = scorebv / (scorebn + scorebv)
-
+        exp_bn = np.exp(scorebn) / (np.exp(scorebn) + np.exp(scorebv))
+        exp_bv = np.exp(scorebv) / (np.exp(scorebn) + np.exp(scorebv))
         exp_ln = np.exp(scoreln) / (np.exp(scoreln) + np.exp(scorelv))
         exp_lv = np.exp(scorelv) / (np.exp(scoreln) + np.exp(scorelv))
 
@@ -113,5 +113,5 @@ def calculate_accuracy(lencoding, bencoding, lweights, bweights, data, gamma=0.5
 
 le, be, lw, bw, d = load(ppt, samples, l_tau, l_lc, l_regtype, b_tau, b_lc, b_regtype)
 
-precision = calculate_accuracy(le, be, lw, bw, d, gamma=0.5)
+precision = calculate_accuracy(le, be, lw, bw, d, gamma)
 print precision
