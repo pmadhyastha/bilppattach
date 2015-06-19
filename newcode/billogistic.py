@@ -15,7 +15,7 @@ class Bilnear(object):
         self.Ndict = Ndict
         self.Mdict = Mdict
         self.Y = Y
-        self.dim = len(Vdict.values()[0])
+        self.dim = (Vdict.values()[0]).shape[1]
         self.nsamples = len(self.samples)
         self.Xi = {}
         self.grad = np.matrix(np.zeros((self.dim, self.dim), dtype=np.float))
@@ -54,9 +54,11 @@ class Bilnear(object):
             for iter_ in xrange(self.nsamples):
 #                v, n, m = self.samples[iter_]
 #                self.Xi[iter_] = self.scale(self.Vdict[v], self.Ndict[n], self.Mdict[m])
-                self.Xi[iter_] = self.scale(self.Vdict[iter_], self.Ndict[iter_],
+
+                xi = self.scale(self.Vdict[iter_], self.Ndict[iter_],
                                             self.Mdict[iter_])
-                self.rsigma += self.Xi[iter_] * self.Xi[iter_].T
+                self.Xi[iter_]  = xi
+                self.rsigma += xi * xi.T
         else:
             for iter_ in xrange(self.nsamples):
                 self.rsigma += self.Xi[iter_] * self.Xi[iter_].T
@@ -66,35 +68,42 @@ class Bilnear(object):
         self.grad = np.matrix(np.zeros((self.dim, self.dim), dtype=np.float))
 
     def _pcaSigma(self, epsilon=1e-10):
-        if self.rsigma is None:
-            self._rsigma()
-        u, s, vt = np.linalg.svd(self.rsigma)
-        self.pcaSigma = np.diag(1. / np.sqrt(np.matrix(np.diag(s)) + epsilon)) * np.matrix(u).T
+        if self.lsigma is None:
+            self._lsigma()
+        u, s, vt = np.linalg.svd(self.lsigma)
+        self.pcaSigma = np.matrix(np.diag(1. / np.sqrt(s + epsilon))) * np.matrix(u).T
 
     def _zcaSigma(self, epsilon=1e-10):
         if self.rsigma is None:
             self._rsigma()
         u, s, vt = np.linalg.svd(self.rsigma)
-        self.zcaSigma = np.matrix(u) * np.diag(1. / np.sqrt(np.matrix(np.diag(s)) +
-                                                         epsilon)) * np.matrix(u).T
+        self.zcaSigma = np.matrix(u) * np.matrix(np.diag(1. / np.sqrt(s +
+                                                         epsilon))) * np.matrix(u).T
 
     def _ryotaSigma(self, epsilon=1e-10):
         if self.rsigma is None:
             self._rsigma()
         if self.lsigma is None:
-            self._lsigma
+            self._lsigma()
         ul, sl, vtl = np.linalg.svd(self.lsigma)
         ur, sr, vtr = np.linalg.svd(self.rsigma)
-        rsig = np.diag(1. / np.sqrt(np.sqrt(np.matrix(np.diag(sr)) +
-                                                 epsilon))) * np.matrix(ur).T
-        lsig = np.diag(1. / np.sqrt(np.sqrt(np.matrix(np.diag(sl)) +
-                                                 epsilon))) * np.matrix(ul).T
+        rsig = np.matrix(np.diag(1. / np.sqrt(np.sqrt(sr) + epsilon)))* np.matrix(ur).T
+        lsig = np.matrix(np.diag(1. / np.sqrt(np.sqrt(sl) + epsilon))) * np.matrix(ul).T
+
         self.ryotaSigma = (rsig, lsig)
 
-    def scale(self, v, n, m):
-        return preprocessing.scale((m*(v-n).T))
+    def get_sigma(sigtype='pca'):
+        if self.pcaSigma:
+            return self.pcaSigma
+        else:
+            self._pcaSigma()
+            return self.pcaSigma
 
-    def preprocess(self, sigmatype=None):
+    def scale(self, v, n, m):
+        return np.matrix(preprocessing.scale((m.T*(v.T-n.T).T)))
+
+
+    def preprocess(self, sigmatype='pca'):
         if sigmatype is 'pca':
             if self.pcaSigma is None:
                 self._pcaSigma()
@@ -108,21 +117,45 @@ class Bilnear(object):
         elif sigmatype is 'ryota':
             if self.ryotaSigma is None:
                 self._ryotaSigma()
-            rsig, lsig = self.ryotaSigma()
+            rsig, lsig = self.ryotaSigma
             for i,xi in self.Xi.items():
                 self.Xpi[i] = rsig * xi * lsig
         else:
             self._pcaSigma()
             self.Xpi = self.Xi
 
+    def preprocessVal(self, Xi, sigmatype=None, lsigma=None, rsigma=None):
+         if sigmatype is 'pca':
+            for i,xi in Xi.items():
+                Xpi[i] = rsigma * xi
+         elif sigmatype is 'zca':
+            for i,xi in Xi.items():
+                Xpi[i] = zcaSigma * xi
+         elif sigmatype is 'ryota':
+            for i,xi in Xi.items():
+                Xpi[i] = rsigma * xi * lsigma
+         else:
+            self._pcaSigma()
+            self.Xpi = self.Xi
+
     def predict(self,W, X):
-        return logistic(np.trace(W*X)) > 0 or -1
+        if logistic(np.trace(W*X)) > 0.5:
+            p = 1
+        else:
+            p = -1
+        return p
 
+    def accuracy_gen(self, Wmat, X, Y):
+        n_correct = 0
+        for i,v in X:
+            if self.predict(Wmat, v) == Y[i]:
+                n_correct += 1
+        return n_correct * 1.0 / len(X.keys())
 
-    def accuracy(self):
+    def accuracy(self, Wmat):
         n_correct = 0
         for i in range(self.nsamples):
-            if self.predict(self.Wmat, self.Xpi[i]) == self.Y[i]:
+            if self.predict(Wmat, self.Xpi[i]) == self.Y[i]:
                 n_correct += 1
         return n_correct * 1.0 / self.nsamples
 
@@ -131,11 +164,11 @@ class Bilnear(object):
         for n in xrange(self.nsamples):
             self.ll +=  np.log(logistic(self.Y[n] * np.trace(self.Wmat * self.Xpi[n])))
 
-    def log_l(self, Wmat, C):
+    def log_l(self, Wmat):
         ll = 0
         for n in xrange(self.nsamples):
             ll +=  np.log(logistic(self.Y[n] * np.trace(Wmat * self.Xpi[n])))
-        return ll - C * (np.linalg.norm(Wmat,2)**2) / 2
+        return ll
 
     def gradient(self):
         self.grad = np.matrix(np.zeros((self.dim, self.dim), dtype=np.float))
@@ -143,17 +176,15 @@ class Bilnear(object):
             self.grad +=  self.Y[n] * self.Xpi[n].T * logistic(-self.Y[n] *
                                                     np.trace(self.Wmat * self.Xpi[n]))
 
-    def log_l_grad(self, Wmat,C):
+    def log_l_grad(self, Wmat):
         grad = np.matrix(np.zeros((self.dim, self.dim), dtype=np.float))
         for n in range(self.nsamples):
-            grad +=  self.Y[n] * self.Xpi[n].T * logistic(-self.Y[n] *
-                                                    np.trace(Wmat * self.Xpi[n]))
-        grad -= C * Wmat
+            grad = grad +  self.Y[n] * self.Xpi[n].T * logistic(-self.Y[n] * np.trace(Wmat * self.Xpi[n]))
         return grad
 
-    def objective(self, tau):
-        self.log_likelihood()
-        return (self.ll + tau*self.norm)
+    def objective(self, Wmat, tau, norm):
+        ll = self.log_l(Wmat)
+        return - (ll - tau*norm)
 
     def logl(self):
         self.log_likelihood()
@@ -163,9 +194,10 @@ class Bilnear(object):
         self.Wmat = w_k
         self.norm = norm
 
-    def output(self):
-        self.gradient()
-        return self.Wmat, self.grad
+    def output(self, Wmat, tau):
+        grad = self.log_l_grad(Wmat)
+        grad = grad - tau * Wmat
+        return - grad
 
 class Fobos(object):
     def __init__(self, eta, tau):
@@ -174,50 +206,59 @@ class Fobos(object):
         self.iteration = 1
         self.lr = self.eta / np.sqrt(self.iteration)
 
-    def fobos_nn(self, w_k):
+    def fobos_nn(self, w):
         nu = self.tau * self.lr
-        u, s, vt = np.linalg.svd(w_k)
+        u, s, vt = np.linalg.svd(w)
         sdash = np.maximum(s - nu, 0)
         return (np.matrix(u) * np.matrix(np.diag(sdash) * np.matrix(vt))), s
 
-    def fobos_l1(self, w_k):
+    def fobos_l1(self, w):
         nu = self.lr * self.tau
-        return np.multiply(np.sign(w_k), np.max(np.abs(w_k) - nu, 0))
+        return np.multiply(np.sign(w), np.max(np.abs(w) - nu, 0))
 
-    def fobos_l2(self, w_k):
+    def fobos_l2(self, w):
         nu = self.lr * self.tau
-        return w_k / (1 + nu)
+        return w / (1 + nu)
 
-    def optimize(self, w_k, grad, reg_type='nn'):
+    def optimize(self, w_k, grad, reg_type='l2'):
         self.lr = self.eta / np.sqrt(self.iteration)
-        w_k = w_k - self.lr * grad
+        w_k1 = w_k - self.lr * grad
         if reg_type is 'nn':
-            w_k, s = self.fobos_nn(w_k)
+            w_k2, s = self.fobos_nn(w_k1)
             norm = np.sum(sum(s))
         elif reg_type is 'l2':
-            w_k = self.fobos_l2(w_k)
+            w_k2 = self.fobos_l2(w_k1)
             norm = np.linalg.norm(w_k, 2)**2  / 2
         elif reg_type is 'l1':
-            w_k = self.fobos_l1(w_k)
+            w_k2 = self.fobos_l1(w_k1)
             norm = np.linalg.norm(w_k, 1)
 
         self.iteration += 1
 
-        return w_k, norm
+        return w_k2, norm
 
-def extdata(pp='for'):
+def extdata(datat='train',pp='for'):
     samples = []
     Vdict = {}
     Ndict = {}
     Mdict = {}
     Y = []
-    sam = [(l.strip().split()[1:5], l.strip().split()[5]) for l in
-               open('datasets/cleantrain.txt')]
-    hdata = [l.strip() for l in open('datasets/forhead.txt')]
-    mdata = [l.strip() for l in open('datasets/formod.txt')]
-    hmat = np.matrix(mmread('datasets/trainhw2v.mtx').todense())
-    mmat = np.matrix(mmread('datasets/trainmw2v.mtx').todense())
-    print len(hdata), hmat.shape
+
+    if datat is 'train':
+        sam = [(l.strip().split()[1:5], l.strip().split()[5]) for l in
+                open('datasets/cleantrain.txt')]
+        hdata = [l.strip() for l in open('datasets/forhead.txt')]
+        mdata = [l.strip() for l in open('datasets/formod.txt')]
+        hmat = np.matrix(mmread('datasets/trainhw2v.mtx').todense())
+        mmat = np.matrix(mmread('datasets/trainmw2v.mtx').todense())
+    elif datat is 'dev':
+        sam = [(l.strip().split()[1:5], l.strip().split()[5]) for l in
+                open('datasets/cleandev.txt')]
+        hdata = [l.strip() for l in open('datasets/devheads.txt')]
+        mdata = [l.strip() for l in open('datasets/devmods.txt')]
+        hmat = np.matrix(mmread('datasets/devhw2v.mtx').todense())
+        mmat = np.matrix(mmread('datasets/devmw2v.mtx').todense())
+
     for s,y in sam:
         if s[2] == pp:
             samples.append(list(s[i] for i in [0,1,3]))
@@ -227,28 +268,36 @@ def extdata(pp='for'):
                 Y.append(-1)
 
     for iter_ in xrange(len(samples)):
-        print samples[iter_][0]
         Vdict[iter_] = hmat[hdata.index(samples[iter_][0])]
         Ndict[iter_] = hmat[hdata.index(samples[iter_][1])]
         Mdict[iter_] = mmat[mdata.index(samples[iter_][2])]
 
     return samples, Vdict, Ndict, Mdict, Y
 
-def main(samples, Vdict, Ndict, Mdict, Y, maxiter, eta, tau):
+def main(maxiter, tau, eta):
 
+    samples, Vdict, Ndict, Mdict, Y = extdata()
+    dsamples, dVdict, dNdict, dMdict, dY = extdata(datat='dev')
     operator = Bilnear(samples, Vdict, Ndict, Mdict, Y)
+    doperator = Bilnear(dsamples, dVdict, dNdict, dMdict, dY)
     optimizer = Fobos(eta, tau)
     operator.preprocess()
+    doperator.preprocess()
+    l = (Vdict.values()[0]).shape[1]
+    w_k = np.matrix(np.zeros((l,l), dtype=np.float))
+    norm = 0
     for i in xrange(maxiter):
         start_loop = time()
         operator.grad_init()
-        cost = -operator.objective(tau)
-        w_k, grad = operator.output()
-        w_k, norm = optimizer.optimize(w_k, -grad)
-        operator.update(w_k, norm)
+        cost = operator.objective(w_k, tau,norm)
+        grad = operator.output(w_k, tau)
+        w_k1, norm = optimizer.optimize(w_k, grad)
+#        operator.update(w_k, norm)
         end_loop = time()
-        print i, cost, norm, operator.accuracy(), end_loop - start_loop
-
+        print '%d cost=%.2f norm=%.2f tracc=%.2f devacc=%.2f time=%.2f' % (i,
+        cost, norm, operator.accuracy(w_k), doperator.accuracy(w_k), end_loop -
+                                                                         start_loop)
+        w_k = w_k1
 
 
 
