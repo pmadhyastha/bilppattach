@@ -9,13 +9,14 @@ def logistic(z):
 
 class Bilnear(object):
 
-    def __init__(self, samples, Vdict, Ndict, Mdict, Y, Winit='random'):
+    def __init__(self, samples, Vdict, Ndict, Mdict, Y, Winit='zeros'):
         self.samples = samples
         self.Vdict = Vdict
         self.Ndict = Ndict
         self.Mdict = Mdict
+        self.ll = None
         self.Y = Y
-        self.dim = len(Vdict.values()[0])
+        self.dim = Vdict.values()[0].shape[1]
         self.nsamples = len(self.samples)
         self.Xi = {}
         self.grad = np.matrix(np.zeros((self.dim, self.dim), dtype=np.float))
@@ -25,6 +26,8 @@ class Bilnear(object):
             self.Wmat = np.matrix(np.zeros((self.dim, self.dim), dtype=np.float))
         elif Winit is 'identity':
             self.Wmat = np.matrix(np.identity(self.dim, dtype=np.float))
+        else:
+            self.Wmat = Winit
         self.norm = np.linalg.norm(self.Wmat)
         self.lsigma = None
         self.rsigma = None
@@ -49,6 +52,7 @@ class Bilnear(object):
         self.lsigma = self.lsigma / self.nsamples
 
     def _rsigma(self):
+        print self.dim
         self.rsigma = np.matrix(np.zeros((self.dim, self.dim), dtype=np.float))
         if self.Xi == {}:
             for iter_ in xrange(self.nsamples):
@@ -56,6 +60,7 @@ class Bilnear(object):
 #                self.Xi[iter_] = self.scale(self.Vdict[v], self.Ndict[n], self.Mdict[m])
                 self.Xi[iter_] = self.scale(self.Vdict[iter_], self.Ndict[iter_],
                                             self.Mdict[iter_])
+
                 self.rsigma += self.Xi[iter_] * self.Xi[iter_].T
         else:
             for iter_ in xrange(self.nsamples):
@@ -92,14 +97,15 @@ class Bilnear(object):
         self.ryotaSigma = (rsig, lsig)
 
     def scale(self, v, n, m):
-        return preprocessing.scale((m*(v-n).T))
+        return preprocessing.scale(np.dot(m.T,(v-n)))
 
-    def preprocess(self, sigmatype=None):
+    def preprocess(self, sigmatype='pca'):
         if sigmatype is 'pca':
             if self.pcaSigma is None:
                 self._pcaSigma()
             for i,xi in self.Xi.items():
-                self.Xpi[i] = self.pcaSigma * xi
+        #        self.Xpi[i] = self.pcaSigma * xi
+                self.Xpi[i] = xi
         elif sigmatype is 'zca':
             if self.zcaSigma is None:
                 self._zcaSigma()
@@ -111,12 +117,15 @@ class Bilnear(object):
             rsig, lsig = self.ryotaSigma()
             for i,xi in self.Xi.items():
                 self.Xpi[i] = rsig * xi * lsig
-        else:
-            self._pcaSigma()
-            self.Xpi = self.Xi
-
+#        else:
+#            self._pcaSigma()
+#            self.Xpi = self.Xi
+#
     def predict(self,W, X):
-        return logistic(np.trace(W*X)) > 0 or -1
+        if logistic(np.trace(np.dot(W,X))) > 0.5:
+            return 1
+        else:
+            return -1
 
 
     def accuracy(self):
@@ -129,25 +138,28 @@ class Bilnear(object):
     def log_likelihood(self):
         self.ll = 0
         for n in xrange(self.nsamples):
-            self.ll +=  np.log(logistic(self.Y[n] * np.trace(self.Wmat * self.Xpi[n])))
+            self.ll +=  np.log(logistic(self.Y[n] *
+                                        np.trace(np.dot(self.Wmat,self.Xpi[n]))))
 
     def log_l(self, Wmat, C):
         ll = 0
         for n in xrange(self.nsamples):
-            ll +=  np.log(logistic(self.Y[n] * np.trace(Wmat * self.Xpi[n])))
+            ll +=  np.log(logistic(self.Y[n] * np.trace(np.dot(Wmat,
+                                                               self.Xpi[n]))))
         return ll - C * (np.linalg.norm(Wmat,2)**2) / 2
 
     def gradient(self):
-        self.grad = np.matrix(np.zeros((self.dim, self.dim), dtype=np.float))
         for n in range(self.nsamples):
-            self.grad +=  self.Y[n] * self.Xpi[n].T * logistic(-self.Y[n] *
-                                                    np.trace(self.Wmat * self.Xpi[n]))
+            self.grad +=  self.Y[n] * np.dot(self.Xpi[n].T, logistic(-self.Y[n] *
+                                                    np.trace(np.dot(self.Wmat,
+                                                                    self.Xpi[n]))))
 
     def log_l_grad(self, Wmat,C):
         grad = np.matrix(np.zeros((self.dim, self.dim), dtype=np.float))
         for n in range(self.nsamples):
-            grad +=  self.Y[n] * self.Xpi[n].T * logistic(-self.Y[n] *
-                                                    np.trace(Wmat * self.Xpi[n]))
+            grad +=  self.Y[n] * np.dot(self.Xpi[n].T, logistic(-self.Y[n] *
+                                                    np.dot(np.trace(Wmat,
+                                                                    self.Xpi[n]))))
         grad -= C * Wmat
         return grad
 
@@ -205,7 +217,7 @@ class Fobos(object):
 
         return w_k, norm
 
-def extdata(pp='for'):
+def extdata(pp='in'):
     samples = []
     Vdict = {}
     Ndict = {}
@@ -227,36 +239,64 @@ def extdata(pp='for'):
                 Y.append(-1)
 
     for iter_ in xrange(len(samples)):
-        print samples[iter_][0]
         Vdict[iter_] = hmat[hdata.index(samples[iter_][0])]
         Ndict[iter_] = hmat[hdata.index(samples[iter_][1])]
         Mdict[iter_] = mmat[mdata.index(samples[iter_][2])]
 
     return samples, Vdict, Ndict, Mdict, Y
 
-def main(samples, Vdict, Ndict, Mdict, Y, maxiter, eta, tau):
+def extdevdata(pp='in'):
+    samples = []
+    Vdict = {}
+    Ndict = {}
+    Mdict = {}
+    Y = []
+    sam = [(l.strip().split()[1:5], l.strip().split()[5]) for l in
+               open('datasets/cleandev.txt')]
+    hdata = [l.strip() for l in open('datasets/devheads.txt')]
+    mdata = [l.strip() for l in open('datasets/devmods.txt')]
+    hmat = np.matrix(mmread('datasets/devhw2v.mtx').todense())
+    mmat = np.matrix(mmread('datasets/devmw2v.mtx').todense())
+    print len(hdata), hmat.shape
+    for s,y in sam:
+        if s[2] == pp:
+            samples.append(list(s[i] for i in [0,1,3]))
+            if y is 'v':
+                Y.append(1)
+            elif y is 'n':
+                Y.append(-1)
+
+    for iter_ in xrange(len(samples)):
+        Vdict[iter_] = hmat[hdata.index(samples[iter_][0])]
+        Ndict[iter_] = hmat[hdata.index(samples[iter_][1])]
+        Mdict[iter_] = mmat[mdata.index(samples[iter_][2])]
+
+    return samples, Vdict, Ndict, Mdict, Y
+
+
+def training(prep='for', maxiter=100, eta=0.001, tau=0.00001, reg='nn'):
+    samples, Vdict, Ndict, Mdict, Y = extdata(pp=prep)
+    dsamples, dVdict, dNdict, dMdict, dY = extdevdata(pp=prep)
 
     operator = Bilnear(samples, Vdict, Ndict, Mdict, Y)
-    optimizer = Fobos(eta, tau)
     operator.preprocess()
+
+    doperator = Bilnear(dsamples, dVdict, dNdict, dMdict, dY)
+    doperator.preprocess()
+
+
+    optimizer = Fobos(eta, tau)
     for i in xrange(maxiter):
         start_loop = time()
         operator.grad_init()
         cost = -operator.objective(tau)
         w_k, grad = operator.output()
-        w_k, norm = optimizer.optimize(w_k, -grad)
+        w_k, norm = optimizer.optimize(w_k, -grad, reg_type=reg)
         operator.update(w_k, norm)
+        doperator.update(w_k, norm)
         end_loop = time()
-        print i, cost, norm, operator.accuracy(), end_loop - start_loop
-
-
-
-
-
-
-
-
-
+        print ("%d cost = %f norm =  %f accuracy = %f dev-accuracy = %f time = %f" %
+               (i+1, cost, norm, operator.accuracy(), doperator.accuracy(), end_loop - start_loop))
 
 
 
