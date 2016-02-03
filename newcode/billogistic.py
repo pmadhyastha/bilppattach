@@ -96,7 +96,7 @@ class Bilnear(object):
 
         self.ryotaSigma = (rsig, lsig)
 
-    def get_sigma(sigtype='pca'):
+    def get_sigma(self,sigtype='pca'):
         if self.pcaSigma:
             return self.pcaSigma
         else:
@@ -132,13 +132,13 @@ class Bilnear(object):
     def preprocessVal(self, Xi, sigmatype=None, lsigma=None, rsigma=None):
          if sigmatype is 'pca':
             for i,xi in Xi.items():
-                Xpi[i] = rsigma * xi
+                self.Xpi[i] = rsigma * xi
          elif sigmatype is 'zca':
             for i,xi in Xi.items():
-                Xpi[i] = zcaSigma * xi
+                self.Xpi[i] = self.zcaSigma * xi
          elif sigmatype is 'ryota':
             for i,xi in Xi.items():
-                Xpi[i] = rsigma * xi * lsigma
+                self.Xpi[i] = rsigma * xi * lsigma
          else:
             self._pcaSigma()
             self.Xpi = self.Xi
@@ -243,67 +243,74 @@ class Fobos(object):
 
         return w_k2, norm
 
-def extdata(datat='train',pp='for'):
-    samples = []
-    Vdict = {}
-    Ndict = {}
-    Mdict = {}
-    Y = []
+def dataextract(pp='in'):
+    '''
+    Simple stuff,relatively:
+    '''
+    trainV = {}
+    trainN = {}
+    trainM = {}
+    traindata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in
+                open('datasets/cleantrain.txt') if d.strip().split()[3] == pp]
+    trainX = [list(t[0][i] for i in [0,1,3]) for t in traindata]
+    trainY = [1 if y[1] == 'v' else -1 for y in traindata]
+    tHf = [l.strip() for l in open('datasets/forhead.txt')]
+    tMf = [l.strip() for l in open('datasets/formod.txt')]
+    trH = np.matrix(mmread('datasets/trainhw2v.mtx').todense())
+    trM = np.matrix(mmread('datasets/trainmw2v.mtx').todense())
+    for eg in xrange(len(traindata)):
+        trainV[eg] = trH[tHf.index(trainX[eg][0])]
+        trainN[eg] = trH[tHf.index(trainX[eg][1])]
+        trainM[eg] = trM[tMf.index(trainX[eg][2])]
 
-    if datat is 'train':
-        sam = [(l.strip().split()[1:5], l.strip().split()[5]) for l in
-                open('datasets/cleantrain.txt')]
-        hdata = [l.strip() for l in open('datasets/forhead.txt')]
-        mdata = [l.strip() for l in open('datasets/formod.txt')]
-        hmat = np.matrix(mmread('datasets/trainhw2v.mtx').todense())
-        mmat = np.matrix(mmread('datasets/trainmw2v.mtx').todense())
-    elif datat is 'dev':
-        sam = [(l.strip().split()[1:5], l.strip().split()[5]) for l in
-                open('datasets/cleandev.txt')]
-        hdata = [l.strip() for l in open('datasets/devheads.txt')]
-        mdata = [l.strip() for l in open('datasets/devmods.txt')]
-        hmat = np.matrix(mmread('datasets/devhw2v.mtx').todense())
-        mmat = np.matrix(mmread('datasets/devmw2v.mtx').todense())
 
-    for s,y in sam:
-        if s[2] == pp:
-            samples.append(list(s[i] for i in [0,1,3]))
-            if y is 'v':
-                Y.append(1)
-            elif y is 'n':
-                Y.append(-1)
+    devV = {}
+    devN = {}
+    devM = {}
+    devdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d
+               in open('datasets/cleandev.txt') if d.strip().split()[3] == pp]
+    devX = [list(d[0][i] for i in [0,1,3]) for d in devdata]
+    devY = [1 if y[1] == 'v' else -1 for y in devdata]
+    dHf = [l.strip() for l in open('datasets/devheads.txt')]
+    dMf = [l.strip() for l in open('datasets/devmods.txt')]
+    deH = np.matrix(mmread('datasets/devhw2v.mtx').todense())
+    deM = np.matrix(mmread('datasets/devmw2v.mtx').todense())
+    for eg in xrange(len(devdata)):
+        devV[eg] = deH[dHf.index(devX[eg][0])]
+        devN[eg] = deH[dHf.index(devX[eg][1])]
+        devM[eg] = deM[dMf.index(devX[eg][2])]
 
-    for iter_ in xrange(len(samples)):
-        Vdict[iter_] = hmat[hdata.index(samples[iter_][0])]
-        Ndict[iter_] = hmat[hdata.index(samples[iter_][1])]
-        Mdict[iter_] = mmat[mdata.index(samples[iter_][2])]
+    return trainX, trainY, trainV, trainN, trainM, devX, devY, devV, devN, devM
 
-    return samples, Vdict, Ndict, Mdict, Y
 
-def main(maxiter, tau, eta):
+def main(maxiter=10, tau=0.01, eta=0.01, prep='into'):
 
-    samples, Vdict, Ndict, Mdict, Y = extdata()
-    dsamples, dVdict, dNdict, dMdict, dY = extdata(datat='dev')
-    operator = Bilnear(samples, Vdict, Ndict, Mdict, Y)
-    doperator = Bilnear(dsamples, dVdict, dNdict, dMdict, dY)
-    optimizer = Fobos(eta, tau)
+    trX, trY, trV, trN, trM, deX, deY, deV, deN, deM = dataextract(pp=prep)
+    operator = Bilnear(trX, trV, trN, trM, trY)
+    doperator = Bilnear(deX, deV, deN, deM, deY)
+    optimizer = Fobos(float(eta), float(tau))
     operator.preprocess()
     doperator.preprocess()
-    l = (Vdict.values()[0]).shape[1]
+    l = (trV.values()[0]).shape[1]
+    print 'Number of Training Examples = ', len(trY), \
+        ' Number of Dev Examples = ', len(deY), ' Dimensionality = ', l
     w_k = np.matrix(np.zeros((l,l), dtype=np.float))
     norm = 0
-    for i in xrange(maxiter):
+    for i in xrange(int(maxiter)):
         start_loop = time()
         operator.grad_init()
-        cost = operator.objective(w_k, tau,norm)
-        grad = operator.output(w_k, tau)
+        cost = operator.objective(w_k, float(tau), norm)
+        grad = operator.output(w_k, float(tau))
         w_k1, norm = optimizer.optimize(w_k, grad)
-#        operator.update(w_k, norm)
+        operator.update(w_k, norm)
         end_loop = time()
-        print '%d cost=%.2f norm=%.2f tracc=%.2f devacc=%.2f time=%.2f' % (i,
+        print '%d cost=%.2f norm=%.2f tracc=%.2f devacc=%.2f time=%.2f' % (i+1,
         cost, norm, operator.accuracy(w_k), doperator.accuracy(w_k), end_loop -
                                                                          start_loop)
         w_k = w_k1
 
 
+if __name__ == '__main__':
+    import plac
+    plac.call(main)
 
