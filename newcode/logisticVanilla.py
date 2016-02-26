@@ -1,13 +1,12 @@
+#!/usr/bin/python2.7
+from __future__ import division
 import numpy as np
 import scipy.sparse as ss
-from collections import defaultdict
 
 def logistic(z):
     return 1.0 / (1.0 + np.exp(-z))
 
 def predict(w, x):
-    print w, x
-    print logistic(np.dot(w, x))
     return logistic(np.dot(w, x)) > 0.5 or -1
 
 def log_likelihood(X, Y, w, C=0.1):
@@ -22,7 +21,6 @@ def log_likelihood_grad(X, Y, w, C=0.1):
         s += Y[i] * X[i] * logistic(-Y[i] * np.dot(X[i], w))
 
     s -= C * w
-    print 'Computed Grad'
     return s
 def grad_num(X, Y, w, f, eps=0.00001):
     K = len(w)
@@ -60,7 +58,7 @@ def train_w(X, Y, C=0.1):
     K = X.shape[1]
     initial_guess = np.zeros(K)
     print 'here with C = ', C
-    return scipy.optimize.fmin_bfgs(f, initial_guess, fprime, maxiter=10,
+    return scipy.optimize.fmin_cg(f, initial_guess, fprime,
                                     disp=True)
 
 def accuracy(X, Y, w):
@@ -118,13 +116,15 @@ def dataextract(pp='in'):
     return np.array(Xtrain.todense()), Ytrain, np.array(Xdev.todense()), Ydev
 
 def main(prep='in'):
-    all_C = np.arange(0.1, 1, 0.1)
+    all_C = np.arange(0.0, 1, 0.01)
     Xtrain, Ytrain, Xdev, Ydev = dataextract(pp=prep)
     for C in all_C:
        w = train_w(Xtrain, Ytrain, C)
        print accuracy(Xdev, Ydev, w)
 
-
+if __name__ == '__main__':
+    import plac
+    plac.call(main)
 
 #def fold(arr, K, i):
 #    N = len(arr)

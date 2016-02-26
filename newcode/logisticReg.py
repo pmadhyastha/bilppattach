@@ -30,9 +30,9 @@ def dataextract(pp='in'):
     '''
 
     traindata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in
-                open('datasets/cleantrain.txt') if d.strip().split()[3] == pp]
+                open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/cleantrain.txt') if d.strip().split()[3] == pp]
     devdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d
-               in open('datasets/cleandev.txt') if d.strip().split()[3] == pp]
+               in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/cleantest.txt') if d.strip().split()[3] == pp]
 
     trainX = {eg: word_features(traindata[eg][0]) for eg in xrange(len(traindata))}
     Ytrain = [1 if y[1] == 'v' else -1 for y in traindata]
@@ -170,10 +170,13 @@ def main(maxiter=10, tau=0.01, eta=0.01, prep='into'):
 #    all_C = np.arange(0.0, 1, 0.01)
     Xtrain, Ytrain, Xdev, Ydev = dataextract(pp=prep)
     operator = Linear(Xtrain, Ytrain)
-    doperator = Linear(Xdev, Ydev)
+    if len(Ydev) != 0: 
+        doperator = Linear(Xdev, Ydev)
+    else:
+        doperator = operator
     optimizer = Fobos( eta=0.1, tau=0.1)
     l = Xtrain.shape[1]
-    print 'Number of Training Examples = ', len(Ytrain), \
+    print 'Preposition = ', prep, 'Number of Training Examples = ', len(Ytrain), \
         ' Number of Dev Examples = ', len(Ydev), ' Dimensionality = ', l
     w_k = np.zeros(l, dtype=np.float)
     norm = 0
@@ -184,7 +187,7 @@ def main(maxiter=10, tau=0.01, eta=0.01, prep='into'):
         w_k1, norm = optimizer.optimize(w_k, grad)
         operator.update(w_k, norm)
         end_loop = time()
-        print '%d cost=%.2f norm=%.2f tracc=%.2f devacc=%.2f time=%.2f' % (i+1,
+        print '%d cost=%.2f norm=%.2f tracc=%.3f devacc=%.3f time=%.2f' % (i+1,
         cost, norm, operator.accuracy(w_k), doperator.accuracy(w_k), end_loop -
                                                                          start_loop)
         w_k = w_k1
