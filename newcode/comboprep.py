@@ -378,7 +378,7 @@ def test(prep, modelBil, modelLin, featset):
 
 
 
-def main(maxiter=100, taul=0.001, etal=0.01, taub=0.0000001, etab=0.001, prep='for'):
+def main(maxiter=100, taul=0.001, etal=0.01, taub=0.0000001, etab=0.001, prep='for', linmodel=None, bilmodel=None):
 
     trX, trY, trXl, trV, trN, trP, trM, deX, deY, deXl, deV, deN, deP, deM, featset = dataextract(pp=prep)
     print trXl.shape, deXl.shape
@@ -395,8 +395,16 @@ def main(maxiter=100, taul=0.001, etal=0.01, taub=0.0000001, etab=0.001, prep='f
     lindim = trXl.shape[1]
     print 'Preposition = ', prep, 'Number of Training Examples = ', len(trY), \
         ' Number of Dev Examples = ', len(deY), ' Dimensionality = ', bildim1
-    w_k = np.matrix(np.zeros((bildim1,bildim2), dtype=np.float))
-    w_l = np.zeros(lindim, dtype=np.float)
+    if bilmodel:
+        w_k = np.load(bilmodel)
+    else:
+        w_k = np.matrix(np.zeros((bildim1,bildim2), dtype=np.float))
+
+    if linmodel:
+        w_k = np.load(linmodel)
+    else:
+        w_l = np.zeros(lindim, dtype=np.float)
+    
     normlin = 0
     normbil = 0
     bestacc = 0.0

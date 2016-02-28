@@ -6,6 +6,7 @@ import numpy as np
 from scipy import linalg
 from sklearn.utils import as_float_array
 from sklearn.base import TransformerMixin, BaseEstimator
+from fbpca import svd
 import sys
 sys.stdout.flush()
 
@@ -244,12 +245,13 @@ class Fobos(object):
 
     def fobos_nn(self, w):
         nu = self.tau * self.lr
-        u, s, vt = np.linalg.svd(w)
+#       u, s, vt = np.linalg.svd(w)
+        u, s, v = svd(w)
         sdash = np.maximum(s - nu, 0)
         sdashtemp = np.diag(sdash)
-        sdashzeros = np.zeros((u.shape[0], vt.shape[0]), dtype=np.float)
+        sdashzeros = np.zeros((u.shape[0], v.shape[1]), dtype=np.float)
         sdashzeros[:sdashtemp.shape[0], :sdashtemp.shape[1]] = sdashtemp
-        return (np.matrix(u) * np.matrix(sdashzeros * np.matrix(vt))), s
+        return np.matrix(u.dot(sdashzeros.dot(v.T))), s
 
     def fobos_l1(self, w):
         nu = self.lr * self.tau
@@ -285,7 +287,6 @@ def test(prep, model, wetyp):
     testacc = toperator.accuracy(model)
     print 'Computing test accuracy, ... ' 
     print 'accuracy over test = ',testacc
-    return testacc
 
 
 def main(maxiter=10, tau=0.01, eta=0.01, prep='into', we='skipdep', model=None):
@@ -318,6 +319,7 @@ def main(maxiter=10, tau=0.01, eta=0.01, prep='into', we='skipdep', model=None):
         cost = operator.objective(w_k, float(tau), norm)
         grad = operator.output(w_k, float(tau))
         w_k1, norm = optimizer.optimize(w_k, grad)
+        print w_k1.shape
         operator.update(w_k, norm)
         end_loop = time()
         devacc = doperator.accuracy(w_k)
