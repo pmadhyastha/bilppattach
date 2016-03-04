@@ -4,6 +4,7 @@ from scipy.io import mmread
 from time import time
 import numpy as np
 from scipy import linalg
+from sklearn.decomposition import randomized_svd as rsvd
 from sklearn.utils import as_float_array
 from sklearn.base import TransformerMixin, BaseEstimator
 import sys
@@ -235,6 +236,69 @@ def dataextractTest(pp='into', wetype='skipdep'):
     return testX, testY, testV, testN, testP, testM
 
 
+def dataextractTestNYC(pp='into', wetype='skipdep'):
+    '''
+    Simple stuff,relatively:
+    '''
+    testV = {}
+    testN = {}
+    testP = {}
+    testM = {}
+
+    if pp != 'all':
+        testdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in
+                    open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/nyctestset.txt') if d.strip().split()[3] != pp]
+    else:
+        testdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in
+                    open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/nyctestset.txt')]
+
+    testX = [list(t[0][i] for i in [0,1,2,3]) for t in testdata]
+    testY = [1 if y[1] == 'v' else -1 for y in testdata]
+    testvocab = [w.strip() for w in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/nyctestsetvocab.txt')]
+
+    testMat = extract_reps(filename='/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/nyctestset.'+wetype+'.txt', wordlist=testvocab)
+    testMat = np.matrix(np.hstack([np.matrix(testMat), np.matrix(np.ones(len(testMat))).T]))
+
+    for eg in xrange(len(testdata)):
+        testV[eg] = testMat[testvocab.index(testX[eg][0])]
+        testN[eg] = testMat[testvocab.index(testX[eg][1])]
+        testP[eg] = testMat[testvocab.index(testX[eg][2])]
+        testM[eg] = testMat[testvocab.index(testX[eg][3])]
+
+    return testX, testY, testV, testN, testP, testM
+
+
+def dataextractTestWIKI(pp='into', wetype='skipdep'):
+    '''
+    Simple stuff,relatively:
+    '''
+    testV = {}
+    testN = {}
+    testP = {}
+    testM = {}
+
+    if pp != 'all':
+        testdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in
+                    open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/wkptest.txt') if d.strip().split()[3] != pp]
+    else:
+        testdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d in
+                    open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/wkptest.txt')]
+
+    testX = [list(t[0][i] for i in [0,1,2,3]) for t in testdata]
+    testY = [1 if y[1] == 'v' else -1 for y in testdata]
+    testvocab = [w.strip() for w in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/wkptestvocab.txt')]
+
+    testMat = extract_reps(filename='/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/wkptestvocab.'+wetype+'.txt', wordlist=testvocab)
+    testMat = np.matrix(np.hstack([np.matrix(testMat), np.matrix(np.ones(len(testMat))).T]))
+
+    for eg in xrange(len(testdata)):
+        testV[eg] = testMat[testvocab.index(testX[eg][0])]
+        testN[eg] = testMat[testvocab.index(testX[eg][1])]
+        testP[eg] = testMat[testvocab.index(testX[eg][2])]
+        testM[eg] = testMat[testvocab.index(testX[eg][3])]
+
+    return testX, testY, testV, testN, testP, testM
+
 class Fobos(object):
     def __init__(self, eta, tau):
         self.eta = eta
@@ -244,10 +308,10 @@ class Fobos(object):
 
     def fobos_nn(self, w):
         nu = self.tau * self.lr
-        u, s, vt = np.linalg.svd(w)
+        u, s, vt = rsvd(w, w.shape[0])
         sdash = np.maximum(s - nu, 0)
         sdashtemp = np.diag(sdash)
-        sdashzeros = np.zeros((u.shape[0], vt.shape[0]), dtype=np.float)
+        sdashzeros = np.zeros(u.shape, dtype=np.float)
         sdashzeros[:sdashtemp.shape[0], :sdashtemp.shape[1]] = sdashtemp
         return (np.matrix(u) * np.matrix(sdashzeros * np.matrix(vt))), s
 
@@ -286,6 +350,27 @@ def test(prep, model, wetyp):
     print 'Computing test accuracy, ... ' 
     print 'accuracy over test = ',testacc
     return testacc
+
+def testNYC(prep, model, wetyp):
+
+    teX, teY, teV, teN, teP, teM = dataextractTestNYC(pp=prep, wetype=wetyp)
+    toperator = Bilnear(teX, teV, teN, teP, teM, teY)
+    toperator.preprocess()
+    testacc = toperator.accuracy(model)
+    print 'Computing test accuracy, ... ' 
+    print 'accuracy over test = ',testacc
+    return testacc
+
+def testWIKI(prep, model, wetyp):
+
+    teX, teY, teV, teN, teP, teM = dataextractTestWIKI(pp=prep, wetype=wetyp)
+    toperator = Bilnear(teX, teV, teN, teP, teM, teY)
+    toperator.preprocess()
+    testacc = toperator.accuracy(model)
+    print 'Computing test accuracy, ... ' 
+    print 'accuracy over test = ',testacc
+    return testacc
+
 
 
 def main(maxiter=10, tau=0.01, eta=0.01, prep='into', we='skipdep', model=None):

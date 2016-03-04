@@ -10,6 +10,21 @@ import sys
 sys.stdout.flush()
 
 
+def extract_reps(filename, wordlist):
+
+    fdata = [(w.strip().split()[0], w.strip().split()[1:]) for w
+                in open(filename)]
+    fdict = dict(fdata)
+    dimensions = len(fdict.values()[0])
+    fmat = np.zeros((len(wordlist), dimensions), dtype=np.float)
+    
+    for i, w in enumerate(wordlist):
+        if w in fdict: 
+            fmat[i] = fdict[w]
+    
+    return fmat
+
+
 class ZCA(BaseEstimator, TransformerMixin):
 
     def __init__(self, regularization=10e-05, copy=False):
@@ -297,7 +312,7 @@ class Fobos(object):
 
         return w_k2, norm
 
-def dataextract(pp='in'):
+def dataextract(pp='in', wetype='skipdep'):
     '''
     Simple stuff,relatively:
     '''
@@ -308,17 +323,13 @@ def dataextract(pp='in'):
                 open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/cleantrain.txt') if d.strip().split()[3] == pp]
     trainX = [list(t[0][i] for i in [0,1,3]) for t in traindata]
     trainY = [1 if y[1] == 'v' else -1 for y in traindata]
-    tHf = [l.strip() for l in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/forhead.txt')]
-    tMf = [l.strip() for l in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/formod.txt')]
-    trH = np.matrix(mmread('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/trainhw2v.mtx').todense())
-    trH = np.matrix(np.hstack([trH, np.matrix(np.ones(len(trH))).T]))
-    trM = np.matrix(mmread('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/trainmw2v.mtx').todense())
-    trM = np.matrix(np.hstack([trM, np.matrix(np.ones(len(trM))).T]))
+    trainvocab = [w.strip() for w in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/trainvocab.txt')]
+    trainMat = extract_reps(filename='/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/train.'+wetype+'.txt', wordlist=trainvocab)
+    trainMat = np.matrix(np.hstack([np.matrix(trainMat), np.matrix(np.ones(len(trainMat))).T]))
     for eg in xrange(len(traindata)):
-        trainV[eg] = trH[tHf.index(trainX[eg][0])]
-        trainN[eg] = trH[tHf.index(trainX[eg][1])]
-        trainM[eg] = trM[tMf.index(trainX[eg][2])]
-
+        trainV[eg] = trainMat[trainvocab.index(trainX[eg][0])]
+        trainN[eg] = trainMat[trainvocab.index(trainX[eg][1])]
+        trainM[eg] = trainMat[trainvocab.index(trainX[eg][2])]
 
     devV = {}
     devN = {}
@@ -327,21 +338,19 @@ def dataextract(pp='in'):
                in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/cleandev.txt') if d.strip().split()[3] == pp]
     devX = [list(d[0][i] for i in [0,1,3]) for d in devdata]
     devY = [1 if y[1] == 'v' else -1 for y in devdata]
-    dHf = [l.strip() for l in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/devheads.txt')]
-    dMf = [l.strip() for l in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/devmods.txt')]
-    deH = np.matrix(mmread('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/devhw2v.mtx').todense())
-    deH = np.matrix(np.hstack([deH, np.matrix(np.ones(len(deH))).T]))
-    deM = np.matrix(mmread('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/devmw2v.mtx').todense())
-    deM = np.matrix(np.hstack([deM, np.matrix(np.ones(len(deM))).T]))
+    devvocab = [w.strip() for w in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/devvocab.txt')]
+    devMat = extract_reps(filename='/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/dev.'+wetype+'.txt', wordlist=devvocab)
+    devMat = np.matrix(np.hstack([np.matrix(devMat), np.matrix(np.ones(len(devMat))).T]))
+
     for eg in xrange(len(devdata)):
-        devV[eg] = deH[dHf.index(devX[eg][0])]
-        devN[eg] = deH[dHf.index(devX[eg][1])]
-        devM[eg] = deM[dMf.index(devX[eg][2])]
+        devV[eg] = devMat[devvocab.index(devX[eg][0])]
+        devN[eg] = devMat[devvocab.index(devX[eg][1])]
+        devM[eg] = devMat[devvocab.index(devX[eg][2])]
 
     return trainX, trainY, trainV, trainN, trainM, devX, devY, devV, devN, devM
 
 
-def dataextractTest(pp='in'):
+def dataextractTest(pp='in', wetype='skipdep'):
     '''
     Simple stuff,relatively:
     '''
@@ -353,23 +362,92 @@ def dataextractTest(pp='in'):
                in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/cleantest.txt') if d.strip().split()[3] == pp]
     testX = [list(d[0][i] for i in [0,1,3]) for d in testdata]
     testY = [1 if y[1] == 'v' else -1 for y in testdata]
-    tHf = [l.strip() for l in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/testheads.txt')]
-    tMf = [l.strip() for l in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/testmods.txt')]
-    teH = np.matrix(mmread('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/testhw2v.mtx').todense())
-    teH = np.matrix(np.hstack([teH, np.matrix(np.ones(len(teH))).T]))
-    teM = np.matrix(mmread('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/testmw2v.mtx').todense())
-    teM = np.matrix(np.hstack([teM, np.matrix(np.ones(len(teM))).T]))
+    testvocab = [w.strip() for w in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/testvocab.txt')]
+
+    testMat = extract_reps(filename='/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/test.'+wetype+'.txt', wordlist=testvocab)
+    testMat = np.matrix(np.hstack([np.matrix(testMat), np.matrix(np.ones(len(testMat))).T]))
+
     for eg in xrange(len(testdata)):
-        testV[eg] = teH[tHf.index(testX[eg][0])]
-        testN[eg] = teH[tHf.index(testX[eg][1])]
-        testM[eg] = teM[tMf.index(testX[eg][2])]
+        testV[eg] = testMat[testvocab.index(testX[eg][0])]
+        testN[eg] = testMat[testvocab.index(testX[eg][1])]
+        testM[eg] = testMat[testvocab.index(testX[eg][2])]
+
+
+    return testX, testY, testV, testN, testM
+
+def dataextractTestNYC(pp='in', wetype='skipdep'):
+    '''
+    Simple stuff,relatively:
+    '''
+
+    testV = {}
+    testN = {}
+    testM = {}
+    testdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d
+            in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/nyctestset.txt') if d.strip().split()[3] == pp]
+    testX = [list(d[0][i] for i in [0,1,3]) for d in testdata]
+    testY = [1 if y[1] == 'v' else -1 for y in testdata]
+    testvocab = [w.strip() for w in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/nyctestsetvocab.txt')]
+
+    testMat = extract_reps(filename='/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/nyctestset.'+wetype+'.txt', wordlist=testvocab)
+    testMat = np.matrix(np.hstack([np.matrix(testMat), np.matrix(np.ones(len(testMat))).T]))
+
+    for eg in xrange(len(testdata)):
+        testV[eg] = testMat[testvocab.index(testX[eg][0])]
+        testN[eg] = testMat[testvocab.index(testX[eg][1])]
+        testM[eg] = testMat[testvocab.index(testX[eg][2])]
+
+    return testX, testY, testV, testN, testM
+
+def dataextractTestNYC(pp='in', wetype='skipdep'):
+    '''
+    Simple stuff,relatively:
+    '''
+
+    testV = {}
+    testN = {}
+    testM = {}
+    testdata = [(d.strip().split()[1:5], d.strip().split()[5]) for d
+               in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/wsjtest.txt') if d.strip().split()[3] == pp]
+    testX = [list(d[0][i] for i in [0,1,3]) for d in testdata]
+    testY = [1 if y[1] == 'v' else -1 for y in testdata]
+    testvocab = [w.strip() for w in open('/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/wsjtestvocab.txt')]
+
+    testMat = extract_reps(filename='/home/usuaris/pranava/acl2016/shorts/ppattach/newcode/datasets/transfer/wsjtest.'+wetype+'.txt', wordlist=testvocab)
+    testMat = np.matrix(np.hstack([np.matrix(testMat), np.matrix(np.ones(len(testMat))).T]))
+
+    for eg in xrange(len(testdata)):
+        testV[eg] = testMat[testvocab.index(testX[eg][0])]
+        testN[eg] = testMat[testvocab.index(testX[eg][1])]
+        testM[eg] = testMat[testvocab.index(testX[eg][2])]
 
     return testX, testY, testV, testN, testM
 
 
-def test(prep, model):
+def testNYC(prep, model, wetyp):
 
-    teX, teY, teV, teN, teM = dataextractTest(pp=prep)
+    teX, teY, teV, teN,  teM = dataextractTestNYC(pp=prep, wetype=wetyp)
+    toperator = Bilnear(teX, teV, teN,teM, teY)
+    toperator.preprocess()
+    testacc = toperator.accuracy(model)
+    print 'Computing test accuracy, ... ' 
+    print 'accuracy over test = ',testacc
+    return testacc
+
+def testWIKI(prep, model, wetyp):
+
+    teX, teY, teV, teN, teM = dataextractTestWIKI(pp=prep, wetype=wetyp)
+    toperator = Bilnear(teX, teV, teN, teM, teY)
+    toperator.preprocess()
+    testacc = toperator.accuracy(model)
+    print 'Computing test accuracy, ... ' 
+    print 'accuracy over test = ',testacc
+    return testacc
+
+
+def test(prep, model, wetyp):
+
+    teX, teY, teV, teN, teM = dataextractTest(pp=prep, wetype=wetyp)
     toperator = Bilnear(teX, teV, teN, teM, teY)
     toperator.preprocess()
     testacc = toperator.accuracy(model)
@@ -377,10 +455,10 @@ def test(prep, model):
     print 'accuracy over test = ',testacc
 
 
-def main(maxiter=10, tau=0.01, eta=0.01, prep='into'):
+def main(maxiter=10, tau=0.01, eta=0.01, prep='into', we='skipdep'):
 #   buffsize = 0
 #   foutfile = open('output.txt', 'w', buffsize)
-    trX, trY, trV, trN, trM, deX, deY, deV, deN, deM = dataextract(pp=prep)
+    trX, trY, trV, trN, trM, deX, deY, deV, deN, deM = dataextract(pp=prep, wetype=we)
     operator = Bilnear(trX, trV, trN, trM, trY)
     if len(deY) != 0:
         doperator = Bilnear(deX, deV, deN, deM, deY)
@@ -413,7 +491,7 @@ def main(maxiter=10, tau=0.01, eta=0.01, prep='into'):
         print '%d cost=%.2f norm=%.2f tracc=%.2f devacc=%.2f time=%.2f' % (i+1,
         cost, norm, operator.accuracy(w_k), devacc, end_loop - start_loop)
         w_k = w_k1
-    test(prep, bestmodel)
+    test(prep, bestmodel, we)
 #       foutfile.flush()
 #   foutfile.close()
 

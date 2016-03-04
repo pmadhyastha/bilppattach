@@ -396,3 +396,120 @@ for dir in glob('bil_*_w2v100'):
     bpl.test('all', bil, 'w2v100')
     print dir
     
+for dir in glob('bil_*_w2v50'):
+    if len(glob(dir + '/model*')) != 0: 
+        bil = np.load(glob(dir + '/model*')[0])
+    bpl.test('all', bil, 'w2v50')
+    print dir
+    
+for dir in glob('bil_*_w2v100'):
+    if len(glob(dir + '/model*')) != 0: 
+        bil = np.load(glob(dir + '/model*')[0])
+    bpl.test('all', bil, 'w2v100')
+    print dir
+    
+for dir in glob('bil_*_500'):
+    if len(glob(dir + '/model*')) != 0: 
+        bil = np.load(glob(dir + '/model*')[0])
+    bpl.test('all', bil, 'w2v100')
+    print dir
+    
+for dir in glob('bil_*_500'):
+    if len(glob(dir + '/model*')) != 0: 
+        bil = np.load(glob(dir + '/model*')[0])
+    bpl.test('all', bil, 'skipdep')
+    print dir
+    
+for dir in glob('bil_*_gl6b50'):
+    if len(glob(dir + '/model*')) != 0: 
+        bil = np.load(glob(dir + '/model*')[0])
+    bpl.test('all', bil, 'gl6b50')
+    print dir
+    
+for dir in glob('bil_*_gl6b100'):
+    if len(glob(dir + '/model*')) != 0: 
+        bil = np.load(glob(dir + '/model*')[0])
+    bpl.test('all', bil, 'gl6b100')
+    print dir
+    
+reload(bpl)
+bil = np.load('bil_all_0.01_0.00000001_500_w2v50/model5000.010.00000001all.npy') 
+bpl.test('of', bil, 'w2v50')
+bil = np.load('bil_all_0.00000001_0.0001_500_w2v100')
+bil = np.load('bil_all_0.00000001_0.0001_500_w2v100/model5000.000000010.0001all.npy')
+bpl.test('of', bil, 'w2v100')
+bil = np.load('bil_all_0.0000001_0.00001_500')
+bil = np.load('bil_all_0.0000001_0.00001_500/model5000.00000010.00001all.npy')
+bpl.test('of', bil, 'skipdep')
+bil = np.load('bil_all_0.0000001_0.00001_500_gl6b50/model5000.00000010.00001all.npy')
+bpl.test('of', bil, 'gl6b50')
+bil = np.load('bil_all_0.01_0.0001_500_gl6b100/model5000.010.0001all.npy')
+bpl.test('of', bil, 'gl6b100')
+reload(bpl) 
+for pp in ['of', 'in', 'to', 'for', 'on', 'from', 'with', 'at', 'as', 'by']:
+    for fl in [('bil_all_0.01_0.00000001_500_w2v50/model5000.010.00000001all.npy', 'w2v50'), ('bil_all_0.00000001_0.0001_500_w2v100/model5000.000000010.0001all.npy', 'w2v100'),
+    ('bil_all_0.0000001_0.00001_500/model5000.00000010.00001all.npy', 'skipdep'), ('bil_all_0.0000001_0.00001_500_gl6b50/model5000.00000010.00001all.npy', 'gl6b50'),
+    ('bil_all_0.01_0.0001_500_gl6b100/model5000.010.0001all.npy', 'gl6b100')]:
+        print pp, fl[1]
+        bpl.test(pp, np.load(fl[0]), fl[1])
+        
+reload(bpl)
+for pp in ['all']:
+    for fl in [('bil_all_0.01_0.00000001_500_w2v50/model5000.010.00000001all.npy', 'w2v50'), ('bil_all_0.00000001_0.0001_500_w2v100/model5000.000000010.0001all.npy', 'w2v100'),
+    ('bil_all_0.0000001_0.00001_500/model5000.00000010.00001all.npy', 'skipdep'), ('bil_all_0.0000001_0.00001_500_gl6b50/model5000.00000010.00001all.npy', 'gl6b50'),
+    ('bil_all_0.01_0.0001_500_gl6b100/model5000.010.0001all.npy', 'gl6b100')]:
+        print pp, fl[1]
+        bpl.testNYC(pp, np.load(fl[0]), fl[1])
+        
+for pp in ['all']:
+    for fl in [('bil_all_0.01_0.00000001_500_w2v50/model5000.010.00000001all.npy', 'w2v50'), ('bil_all_0.00000001_0.0001_500_w2v100/model5000.000000010.0001all.npy', 'w2v100'),
+    ('bil_all_0.0000001_0.00001_500/model5000.00000010.00001all.npy', 'skipdep'), ('bil_all_0.0000001_0.00001_500_gl6b50/model5000.00000010.00001all.npy', 'gl6b50'),
+    ('bil_all_0.01_0.0001_500_gl6b100/model5000.010.0001all.npy', 'gl6b100')]:
+        print pp, fl[1]
+        bpl.testNYC(pp, np.load(fl[0]), fl[1])
+        
+reload(bpl)
+for pp in ['all']:
+    for fl in [('bil_all_0.01_0.00000001_500_w2v50/model5000.010.00000001all.npy', 'w2v50'), ('bil_all_0.00000001_0.0001_500_w2v100/model5000.000000010.0001all.npy', 'w2v100'),
+    ('bil_all_0.0000001_0.00001_500/model5000.00000010.00001all.npy', 'skipdep'), ('bil_all_0.0000001_0.00001_500_gl6b50/model5000.00000010.00001all.npy', 'gl6b50'),
+    ('bil_all_0.01_0.0001_500_gl6b100/model5000.010.0001all.npy', 'gl6b100')]:
+        print pp, fl[1]
+        bpl.testNYC(pp, np.load(fl[0]), fl[1])
+        
+reload(bpl)
+for pp in ['all']:
+    for fl in [('bil_all_0.01_0.00000001_500_w2v50/model5000.010.00000001all.npy', 'w2v50'), ('bil_all_0.00000001_0.0001_500_w2v100/model5000.000000010.0001all.npy', 'w2v100'),
+    ('bil_all_0.0000001_0.00001_500/model5000.00000010.00001all.npy', 'skipdep'), ('bil_all_0.0000001_0.00001_500_gl6b50/model5000.00000010.00001all.npy', 'gl6b50'),
+    ('bil_all_0.01_0.0001_500_gl6b100/model5000.010.0001all.npy', 'gl6b100')]:
+        print pp, fl[1]
+        bpl.testNYC(pp, np.load(fl[0]), fl[1])
+        
+reload(bpl)
+for pp in ['of']:
+    for fl in [('bil_all_0.01_0.00000001_500_w2v50/model5000.010.00000001all.npy', 'w2v50'), ('bil_all_0.00000001_0.0001_500_w2v100/model5000.000000010.0001all.npy', 'w2v100'),
+    ('bil_all_0.0000001_0.00001_500/model5000.00000010.00001all.npy', 'skipdep'), ('bil_all_0.0000001_0.00001_500_gl6b50/model5000.00000010.00001all.npy', 'gl6b50'),
+    ('bil_all_0.01_0.0001_500_gl6b100/model5000.010.0001all.npy', 'gl6b100')]:
+        print pp, fl[1]
+        bpl.testNYC(pp, np.load(fl[0]), fl[1])
+        
+for pp in ['of']:
+    for fl in [('bil_all_0.01_0.00000001_500_w2v50/model5000.010.00000001all.npy', 'w2v50'), ('bil_all_0.00000001_0.0001_500_w2v100/model5000.000000010.0001all.npy', 'w2v100'),
+    ('bil_all_0.0000001_0.00001_500/model5000.00000010.00001all.npy', 'skipdep'), ('bil_all_0.0000001_0.00001_500_gl6b50/model5000.00000010.00001all.npy', 'gl6b50'),
+    ('bil_all_0.01_0.0001_500_gl6b100/model5000.010.0001all.npy', 'gl6b100')]:
+        print pp, fl[1]
+        bpl.testWSJ(pp, np.load(fl[0]), fl[1])
+        
+for pp in ['of']:
+    for fl in [('bil_all_0.01_0.00000001_500_w2v50/model5000.010.00000001all.npy', 'w2v50'), ('bil_all_0.00000001_0.0001_500_w2v100/model5000.000000010.0001all.npy', 'w2v100'),
+    ('bil_all_0.0000001_0.00001_500/model5000.00000010.00001all.npy', 'skipdep'), ('bil_all_0.0000001_0.00001_500_gl6b50/model5000.00000010.00001all.npy', 'gl6b50'),
+    ('bil_all_0.01_0.0001_500_gl6b100/model5000.010.0001all.npy', 'gl6b100')]:
+        print pp, fl[1]
+        bpl.testWIKI(pp, np.load(fl[0]), fl[1])
+        
+for pp in ['of']:
+    for fl in [('bil_all_0.01_0.00000001_500_w2v50/model5000.010.00000001all.npy', 'w2v50'), ('bil_all_0.00000001_0.0001_500_w2v100/model5000.000000010.0001all.npy', 'w2v100'),
+    ('bil_all_0.0000001_0.00001_500/model5000.00000010.00001all.npy', 'skipdep'), ('bil_all_0.0000001_0.00001_500_gl6b50/model5000.00000010.00001all.npy', 'gl6b50'),
+    ('bil_all_0.01_0.0001_500_gl6b100/model5000.010.0001all.npy', 'gl6b100')]:
+        print pp, fl[1]
+        bpl.testNYC(pp, np.load(fl[0]), fl[1])
+        
