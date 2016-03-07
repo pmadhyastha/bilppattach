@@ -186,6 +186,15 @@ class Bilnear(object):
             grad = grad +  self.Y[n] * dif * logistic(-self.Y[n] * (np.dot(self.Xi[n][0],np.dot(Wmat, self.Xi[n][2].T)) - np.dot(self.Xi[n][1],np.dot(Wmat, self.Xi[n][2].T))))[0,0]
         return grad
 
+    def log_l_grad_stoch(self, Wmat, coin, st):
+        grad = np.matrix(np.zeros((self.dim1, self.dim2), dtype=np.float))
+        for s in range(st):
+            n = coin[s]
+            dif = np.outer(self.Xi[n][0].T, self.Xi[n][2]) - np.outer(self.Xi[n][1].T, self.Xi[n][2])
+            grad = grad +  self.Y[n] * dif * logistic(-self.Y[n] * (np.dot(self.Xi[n][0],np.dot(Wmat, self.Xi[n][2].T)) - np.dot(self.Xi[n][1],np.dot(Wmat, self.Xi[n][2].T))))[0,0]
+        return grad
+
+
     def objective(self, Wmat, tau, norm):
         ll = self.log_l(Wmat)
         return - (ll - tau*norm)
@@ -202,6 +211,14 @@ class Bilnear(object):
         grad = self.log_l_grad(Wmat)
         grad = grad - tau * Wmat
         return - grad
+
+    def output_stoch(self, Wmat, tau, st):
+        coin = np.array(range(self.nsamples))
+        np.random.shuffle(coin)
+        grad = self.log_l_grad_stoch(Wmat, coin, st)
+        grad = grad - tau * Wmat
+        return - grad
+
 
 
 def dataextractTest(pp='into', wetype='skipdep'):
@@ -373,7 +390,7 @@ def testWIKI(prep, model, wetyp):
 
 
 
-def main(maxiter=10, tau=0.01, eta=0.01, prep='into', we='skipdep', model=None):
+def main(maxiter=10, tau=0.01, eta=0.01, prep='into', we='skipdep', st=0, model=None):
 #   buffsize = 0
 #   foutfile = open('output.txt', 'w', buffsize)
     trX, trY, trV, trN, trP, trM, deX, deY, deV, deN, deP, deM = dataextract(pp=prep, wetype=we)
@@ -388,20 +405,22 @@ def main(maxiter=10, tau=0.01, eta=0.01, prep='into', we='skipdep', model=None):
     l = (trV.values()[0]).shape[1]
     m = l*l
     print 'Preposition =', prep, 'Number of Training Examples = ', len(trY), \
-        ' Number of Dev Examples = ', len(deY), ' Dimensionality = ', l
+        ' Number of Dev Examples = ', len(deY), ' Dimensionality = ', l, 'Stochastic Mini-Batch = ', st
     if model:
         w_k = np.load(model)
     else:
         w_k = np.matrix(np.zeros((l,m), dtype=np.float))
-
-    print 'here', w_k.shape
+#   print 'here', w_k.shape
     norm = 0
     bestacc = 0.0
     for i in xrange(int(maxiter)):
         start_loop = time()
         operator.grad_init()
         cost = operator.objective(w_k, float(tau), norm)
-        grad = operator.output(w_k, float(tau))
+        if st:
+            grad = operator.output_stoch(w_k, float(tau), int(st))
+        else:
+            grad = operator.output(w_k, float(tau))
         w_k1, norm = optimizer.optimize(w_k, grad)
         operator.update(w_k, norm)
         end_loop = time()
